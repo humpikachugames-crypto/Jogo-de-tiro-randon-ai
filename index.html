@@ -207,6 +207,19 @@
 </div>
 
 <!-- IN-GAME ZOMBIE SHOP MENU -->
+
+<div id="deathScreen" style="display:none;position:fixed;inset:0;z-index:50;background:rgba(5,8,14,.88);align-items:center;justify-content:center;text-align:center;padding:20px;backdrop-filter:blur(5px)">
+ <div style="width:min(440px,92vw);background:linear-gradient(160deg,#202b3b,#101722);border:1px solid #d94b4b;border-radius:18px;padding:28px;box-shadow:0 18px 70px #000a">
+  <div style="font-size:54px">☠️</div><h1 style="color:#ff6464;margin:8px 0 18px">VOCÊ FOI ELIMINADO</h1>
+  <div style="color:#aebdce;font-size:13px;text-transform:uppercase;letter-spacing:2px">Eliminado por</div>
+  <div id="deathKiller" style="font-size:24px;font-weight:bold;margin:7px 0 18px">Inimigo</div>
+  <div style="color:#aebdce;font-size:13px;text-transform:uppercase;letter-spacing:2px">Arma utilizada</div>
+  <div id="deathWeapon" style="font-size:20px;color:#f2c66d;font-weight:bold;margin:7px 0 22px">Arma</div>
+  <button onclick="window.backLobby()" style="width:100%;padding:13px;background:#b93838;color:white;font-weight:bold">VOLTAR AO LOBBY</button>
+  <div style="font-size:12px;color:#8795a8;margin-top:12px">Voltando automaticamente em alguns segundos...</div>
+ </div>
+</div>
+
 <div id="zombieShop">
     <div class="shop-panel">
         <h2 style="text-align:center; color:#2ecc71; margin-top:0">🧟 LOJA DE ARMAS DA HORDA</h2>
@@ -419,6 +432,7 @@ let bossSpawn = localStorage.getItem('br3d_boss_spawn') || 'floor';
 let bossPool = JSON.parse(localStorage.getItem('br3d_boss_pool') || '["juggernaut","tank","helicopter"]');
 let selectedMap = "forest", selectedCharacter = "soldier", selectedMode = "br";
 let invasionMap='mansion', invasionWeapon='m16', invasionState={active:false,objectives:[],completed:0,nextWave:0,wave:0,spawned:0};
+let lastDamageInfo={killer:'Ambiente',weapon:'Perigo do mapa'};let deathScreenShown=false;let botSerial=0;
 let abilitiesBeforeFreeplay=null;
 
 function saveData() {
@@ -988,7 +1002,7 @@ function createBot(x, z) {
     scene.add(group);
 
     return {
-        mesh: group, x, z, hp: 100, maxHp: 100, alive: true,
+        mesh: group, x, z, hp: 100, maxHp: 100, alive: true, label:'Inimigo '+(++botSerial),
         weapon: botWeaponKey, targetDir: new THREE.Vector3(), aiTimer: 0, lastShot: 0
     };
 }
@@ -1280,7 +1294,7 @@ function updateDefenseMode(now) {
         if(enemy.type==='helicopter') enemy.mesh.rotation.x=0;
         if(enemy.z>-13&&now-enemy.lastAttack>enemy.cooldown){
             enemy.lastAttack=now;
-            damagePlayer(enemy.damage);
+            damagePlayer(enemy.damage,{killer:enemy.type==='tank'?'Tanque inimigo':enemy.type==='helicopter'?'Helicóptero inimigo':'Veículo inimigo',weapon:enemy.type==='tank'?'Canhão':enemy.type==='helicopter'?'Metralhadora':'Colisão'});
             const flash=document.getElementById("damageFlash");
             if(flash){flash.style.opacity="0.8";setTimeout(()=>flash.style.opacity="0",90);}
         }
@@ -1300,7 +1314,7 @@ function updateDefenseMode(now) {
 function makeKingModel(){const g=new THREE.Group();const gold=new THREE.MeshStandardMaterial({color:0xf1c40f,metalness:0.65}), cloth=new THREE.MeshStandardMaterial({color:0x542583}), skin=new THREE.MeshStandardMaterial({color:0xd9a477});const torso=new THREE.Mesh(new THREE.CylinderGeometry(.42,.55,1.15,10),cloth);torso.position.y=1.25;g.add(torso);const head=new THREE.Mesh(new THREE.SphereGeometry(.32,12,10),skin);head.position.y=2.05;g.add(head);const crown=new THREE.Mesh(new THREE.ConeGeometry(.42,.55,5),gold);crown.position.y=2.48;g.add(crown);for(let x of [-.22,.22]){const leg=new THREE.Mesh(new THREE.BoxGeometry(.2,.7,.22),cloth);leg.position.set(x,.38,0);g.add(leg);}return g;}
 function startKingEscort(){kingState={active:true,king:makeKingModel(),kingHp:220,startedAt:performance.now(),nextSpawn:performance.now()+1800,snipers:[],distance:0};kingState.king.position.set(0,0,-8);scene.add(kingState.king);yawObject.position.set(0,2,2);player.hp=100;player.shield=0;document.getElementById('healthLabel').textContent='🛡️ Vida do escolta';document.getElementById('weaponText').textContent='FAL + Colete e Capacete';document.getElementById('controls').textContent='WASD: Mover | MOUSE: Mirar | CLIQUE: Atirar | R: Recarregar | Proteja o rei até o castelo!';const castle=new THREE.Group();const stone=new THREE.MeshStandardMaterial({color:0x777b83}),roof=new THREE.MeshStandardMaterial({color:0x653c32});for(let x of [-13,13]){const tower=new THREE.Mesh(new THREE.BoxGeometry(6,22,7),stone);tower.position.set(x,11,-190);castle.add(tower);const cap=new THREE.Mesh(new THREE.ConeGeometry(5,8,4),roof);cap.position.set(x,26,-190);castle.add(cap);}const wall=new THREE.Mesh(new THREE.BoxGeometry(32,12,4),stone);wall.position.set(0,6,-190);castle.add(wall);scene.add(castle);kingState.castle=castle;}
 function spawnKingSniper(){const g=new THREE.Group();const uniform=new THREE.MeshStandardMaterial({color:0x303b31}),skin=new THREE.MeshStandardMaterial({color:0xb98765});const body=new THREE.Mesh(new THREE.BoxGeometry(.8,1.5,.5),uniform);body.position.y=1;g.add(body);const head=new THREE.Mesh(new THREE.SphereGeometry(.28,10,8),skin);head.position.y=1.95;g.add(head);const rifle=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,1.5),new THREE.MeshStandardMaterial({color:0x171717,metalness:.7}));rifle.position.set(0,1.5,-.7);g.add(rifle);const side=Math.random()<.5?-1:1;g.position.set(side*rand(13,26),0,-rand(35,105));scene.add(g);kingState.snipers.push({mesh:g,hp:90,lastShot:performance.now()+rand(700,1700),alive:true});}
-function updateKingEscort(now){if(!kingState.active)return;const k=kingState.king;k.position.z-=0.035;kingState.distance=Math.max(0,Math.floor(-k.position.z));if(now>=kingState.nextSpawn&&kingState.snipers.filter(s=>s.alive).length<7){spawnKingSniper();kingState.nextSpawn=now+rand(2600,4200);}kingState.snipers.forEach(s=>{if(!s.alive)return;s.mesh.lookAt(k.position.x,1,k.position.z);if(now-s.lastShot>2100){s.lastShot=now;if(Math.random()<0.28){damagePlayer(rand(4,7));showMessage('🪖 SEU COLETE ABSORVEU PARTE DO TIRO!');}else{kingState.kingHp-=rand(5,9);showMessage('🎯 ATIRADOR ACERTOU O REI!');}}});document.getElementById('weaponText').textContent=(selectedMode==='invasion'?weaponData[invasionWeapon].name:'FAL')+' ('+player.ammo+'/'+player.maxAmmo+')';document.getElementById('remainingLabel').textContent='👑 Vida do Rei:';document.getElementById('remaining').textContent=Math.ceil(kingState.kingHp);document.getElementById('defenseTimer').style.display='block';document.getElementById('defenseTimer').textContent='🏰 Distância: '+kingState.distance+' m';if(kingState.kingHp<=0){kingState.active=false;showMessage('💀 O REI FOI ELIMINADO!');setTimeout(window.backLobby,3000);}else if(k.position.z<=-190){kingState.active=false;showMessage('👑 O REI CHEGOU AO CASTELO! MISSÃO CONCLUÍDA!');coins+=100;matchCoins+=100;saveData();awardEvolutOnce(1,'Rei escoltado');setTimeout(window.backLobby,3500);}}
+function updateKingEscort(now){if(!kingState.active)return;const k=kingState.king;k.position.z-=0.035;kingState.distance=Math.max(0,Math.floor(-k.position.z));if(now>=kingState.nextSpawn&&kingState.snipers.filter(s=>s.alive).length<7){spawnKingSniper();kingState.nextSpawn=now+rand(2600,4200);}kingState.snipers.forEach(s=>{if(!s.alive)return;s.mesh.lookAt(k.position.x,1,k.position.z);if(now-s.lastShot>2100){s.lastShot=now;if(Math.random()<0.28){damagePlayer(rand(4,7),{killer:'Atirador inimigo',weapon:'Rifle de precisão'});showMessage('🪖 SEU COLETE ABSORVEU PARTE DO TIRO!');}else{kingState.kingHp-=rand(5,9);showMessage('🎯 ATIRADOR ACERTOU O REI!');}}});document.getElementById('weaponText').textContent=(selectedMode==='invasion'?weaponData[invasionWeapon].name:'FAL')+' ('+player.ammo+'/'+player.maxAmmo+')';document.getElementById('remainingLabel').textContent='👑 Vida do Rei:';document.getElementById('remaining').textContent=Math.ceil(kingState.kingHp);document.getElementById('defenseTimer').style.display='block';document.getElementById('defenseTimer').textContent='🏰 Distância: '+kingState.distance+' m';if(kingState.kingHp<=0){kingState.active=false;showMessage('💀 O REI FOI ELIMINADO!');setTimeout(window.backLobby,3000);}else if(k.position.z<=-190){kingState.active=false;showMessage('👑 O REI CHEGOU AO CASTELO! MISSÃO CONCLUÍDA!');coins+=100;matchCoins+=100;saveData();awardEvolutOnce(1,'Rei escoltado');setTimeout(window.backLobby,3500);}}
 
 // --- BOSS MODE ---
 function makeBossModel(type){const g=new THREE.Group();const armor=new THREE.MeshStandardMaterial({color:type==='tank'?0x46543d:(type==='helicopter'?0x34495e:0x501b1b),metalness:.55,roughness:.45}),dark=new THREE.MeshStandardMaterial({color:0x15191d,metalness:.7}),red=new THREE.MeshStandardMaterial({color:0xb51f24,emissive:0x330000});
@@ -1446,7 +1460,7 @@ window.startGame = function() {
     player.hp = 100; player.shield = 0; player.cold = 0; player.speed=.23; player.isAds = false;camera.fov=75;camera.updateProjectionMatrix();document.getElementById('scopeOverlay').style.display='none';document.getElementById('crosshair').style.display='block';
     player.maxAmmo = getWeaponStats(activeEquippedWeapon).mag; player.ammo = player.maxAmmo;
     player.reloading = false; player.reloadProgress = 0;
-    kills = 0; matchCoins = 0; zombieTokens = 0; wave = 1; burningTargets=[];infectedAllies=[];portableTurret=null;turretControl=false;freeplayMenuOpen=false;freeplayArmorReduction=0;document.getElementById('freeplayMenu').style.display='none';
+    kills = 0; matchCoins = 0; zombieTokens = 0; wave = 1; lastDamageInfo={killer:'Ambiente',weapon:'Perigo do mapa'};deathScreenShown=false;botSerial=0;document.getElementById('deathScreen').style.display='none'; burningTargets=[];infectedAllies=[];portableTurret=null;turretControl=false;freeplayMenuOpen=false;freeplayArmorReduction=0;document.getElementById('freeplayMenu').style.display='none';
     safeZoneRadius = WORLD_SIZE * 0.9;
     
     yawObject.position.set(0, selectedMode === 'defense' ? 3.35 : 2.0, selectedMode==='freeplay'?28:(selectedMode==='invasion'?20:(selectedMode === 'defense' ? 7.2 : 0)));
@@ -1501,7 +1515,7 @@ function spawnZombieWave() {
 }
 
 window.backLobby = function() {
-    gameRunning = false;
+    gameRunning = false;deathScreenShown=false;document.getElementById('deathScreen').style.display='none';
     invasionState.active=false;
     if(abilitiesBeforeFreeplay!==null){equippedAbilities=abilitiesBeforeFreeplay.slice();abilitiesBeforeFreeplay=null;saveData();}
     if(portableTurret&&portableTurret.mesh&&scene)scene.remove(portableTurret.mesh);portableTurret=null;turretControl=false;
@@ -1609,7 +1623,7 @@ function updateReloadAnimation() {
     }
 }
 
-function createExplosion(pos) {
+function createExplosion(pos, source=null) {
     playSound('explosion');
     const expMesh = new THREE.Mesh(
         new THREE.SphereGeometry(7, 16, 16),
@@ -1650,7 +1664,7 @@ function createExplosion(pos) {
     }
 
     const dPlayer = pos.distanceTo(yawObject.position);
-    if (dPlayer < 12) damagePlayer(85 * (1 - dPlayer / 12));
+    if (dPlayer < 12) damagePlayer((source && source.weapon==='RPG' ? 32 : 85) * (1 - dPlayer / 12), source);
 }
 
 function shootWeapon() {
@@ -1921,7 +1935,7 @@ window.freeplayEquipWeapon=function(id){if(!weaponData[id])return;activeEquipped
 window.freeplayToggleAbility=function(id){if(equippedAbilities.includes(id))equippedAbilities=equippedAbilities.filter(x=>x!==id);else if(!equippedAbilities.includes(id))equippedAbilities.push(id);openFreeplayMenu();};
 window.freeplayEquipSpecial=function(id){if(['rotary','rpgtech','zombieclaw'].includes(id))window.freeplayEquipWeapon(id);else if(['portableSMG','portableMissel'].includes(id)){if(!equippedAbilities.includes(id))equippedAbilities.push(id);openFreeplayMenu();}};
 window.freeplayUseArmor=function(i){freeplayArmorReduction=i===10?.90:(.08*(Math.floor(i/2)+1));showMessage('🪖 PROTEÇÃO ATIVADA: '+Math.round(freeplayArmorReduction*100)+'% DE REDUÇÃO');};
-function updateFreeplayMode(now){if(selectedMode!=='freeplay')return;freeplayDummies.forEach(d=>{if(!d.alive){if(now-d.deadAt>3500){d.alive=true;d.hp=d.maxHp;d.mesh.visible=true;}return;}if(d.shooter&&now>=d.nextShot){d.nextShot=now+2000;const bullet=new THREE.Mesh(new THREE.SphereGeometry(.13,8,8),new THREE.MeshBasicMaterial({color:0xff3322}));bullet.position.copy(d.mesh.position).add(new THREE.Vector3(0,1.3,-1));scene.add(bullet);freeplayBullets.push({mesh:bullet,life:110,dir:new THREE.Vector3(0,0,-1)});}});freeplayBullets.forEach((b,i)=>{b.mesh.position.addScaledVector(b.dir,1.2);b.life--;if(b.mesh.position.distanceTo(yawObject.position)<1.3){damagePlayer(5);b.life=0;}if(b.life<=0){scene.remove(b.mesh);freeplayBullets.splice(i,1);}});}
+function updateFreeplayMode(now){if(selectedMode!=='freeplay')return;freeplayDummies.forEach(d=>{if(!d.alive){if(now-d.deadAt>3500){d.alive=true;d.hp=d.maxHp;d.mesh.visible=true;}return;}if(d.shooter&&now>=d.nextShot){d.nextShot=now+2000;const bullet=new THREE.Mesh(new THREE.SphereGeometry(.13,8,8),new THREE.MeshBasicMaterial({color:0xff3322}));bullet.position.copy(d.mesh.position).add(new THREE.Vector3(0,1.3,-1));scene.add(bullet);freeplayBullets.push({mesh:bullet,life:110,dir:new THREE.Vector3(0,0,-1)});}});freeplayBullets.forEach((b,i)=>{b.mesh.position.addScaledVector(b.dir,1.2);b.life--;if(b.mesh.position.distanceTo(yawObject.position)<1.3){damagePlayer(5,{killer:'Boneco de treinamento',weapon:'Pistola de treino'});b.life=0;}if(b.life<=0){scene.remove(b.mesh);freeplayBullets.splice(i,1);}});}
 function startSniperMode(){sniperState={active:true,enemies:[],snipers:[],start:performance.now(),ends:performance.now()+120000,eliminated:0,escaped:0,nextAttackerSpawn:performance.now()+2500};yawObject.position.set(0,18,8);yawObject.rotation.y=0;pitchObject.rotation.x=-.22;player.hp=100;activeEquippedWeapon='sniper';player.maxAmmo=weaponData.sniper.mag;player.ammo=player.maxAmmo;player.reloading=false;if(weaponMesh)camera.remove(weaponMesh);weaponMesh=createWeaponMesh('sniper');camera.add(weaponMesh);const tower=new THREE.Group(),stone=new THREE.MeshStandardMaterial({color:0x59636d});const pillar=new THREE.Mesh(new THREE.BoxGeometry(9,36,9),stone);pillar.position.set(0,0,0);tower.add(pillar);const deck=new THREE.Mesh(new THREE.BoxGeometry(14,.8,14),stone);deck.position.y=18;tower.add(deck);tower.position.set(0,0,8);scene.add(tower);sniperState.tower=tower;const castle=new THREE.Mesh(new THREE.BoxGeometry(28,15,8),stone);castle.position.set(0,7.5,-175);scene.add(castle);sniperState.castle=castle;for(let i=0;i<7;i++)spawnSniperRunner();for(let i=0;i<2;i++)spawnSniperAttacker();document.getElementById('healthLabel').textContent='❤️ Vida';document.getElementById('remainingLabel').textContent='🎯 Ameaças eliminadas:';document.getElementById('controls').textContent='Mouse: Mirar | Clique: Atirar | R: Recarregar | Elimine AMARELOS e VERMELHOS; deixe AZUIS e VERDES passar!';document.getElementById('defenseTimer').style.display='block';}
 function makeRunner(color){const g=new THREE.Group(),mat=new THREE.MeshStandardMaterial({color});const body=new THREE.Mesh(new THREE.BoxGeometry(.9,1.5,.5),mat);body.position.y=.9;g.add(body);const head=new THREE.Mesh(new THREE.SphereGeometry(.27,10,8),new THREE.MeshStandardMaterial({color:0xd8ad83}));head.position.y=1.85;g.add(head);return g;}
 function spawnSniperRunner(){const colors=[0xd62828,0xf1c40f,0x2471a3,0x239b56],role=['red','yellow','blue','green'][Math.floor(Math.random()*4)],color=colors[['red','yellow','blue','green'].indexOf(role)];const mesh=makeRunner(color);mesh.position.set(rand(-25,25),0,-rand(45,100));scene.add(mesh);sniperState.enemies.push({mesh,role,alive:true,speed:rand(.022,.035),hp:100});}
@@ -1930,7 +1944,7 @@ function updateSniperMode(now){if(!sniperState.active)return;sniperState.enemies
  // Atiradores inimigos reaparecem continuamente, com limite simultâneo para evitar travamentos.
  const livingAttackers=sniperState.snipers.filter(s=>s.alive).length;
  if(now>=sniperState.nextAttackerSpawn&&livingAttackers<5){spawnSniperAttacker();sniperState.nextAttackerSpawn=now+rand(3200,4800);} 
- sniperState.snipers.forEach(s=>{if(!s.alive)return;s.mesh.lookAt(yawObject.position);if(now>s.lastShot){s.lastShot=now+rand(1400,2200);if(Math.random()<.68)damagePlayer(rand(6,11));}});const left=Math.max(0,Math.ceil((sniperState.ends-now)/1000));document.getElementById('defenseTimer').textContent='⏱️ '+left+'s | 🎯 Eliminados: '+sniperState.eliminated+' | Atiradores: '+livingAttackers;document.getElementById('remaining').textContent=sniperState.eliminated;if(left<=0&&sniperState.active){sniperState.active=false;showMessage('🏆 CASTELO DEFENDIDO! +2 EVOLUT');awardEvolutOnce(2,'Missão Sniper concluída');setTimeout(window.backLobby,3000);}}
+ sniperState.snipers.forEach(s=>{if(!s.alive)return;s.mesh.lookAt(yawObject.position);if(now>s.lastShot){s.lastShot=now+rand(1400,2200);if(Math.random()<.68)damagePlayer(rand(6,11),{killer:'Atirador inimigo',weapon:'Rifle de precisão'});}});const left=Math.max(0,Math.ceil((sniperState.ends-now)/1000));document.getElementById('defenseTimer').textContent='⏱️ '+left+'s | 🎯 Eliminados: '+sniperState.eliminated+' | Atiradores: '+livingAttackers;document.getElementById('remaining').textContent=sniperState.eliminated;if(left<=0&&sniperState.active){sniperState.active=false;showMessage('🏆 CASTELO DEFENDIDO! +2 EVOLUT');awardEvolutOnce(2,'Missão Sniper concluída');setTimeout(window.backLobby,3000);}}
 
 
 function buildInvasionMap(){
@@ -1957,7 +1971,7 @@ function spawnInvasionWave(){
     const side=i%4;
     const x=side===0?-39:(side===1?39:rand(-34,34));
     const z=side===2?-50:(side===3?-44:rand(-48,-24));
-    const b=createBot(x,z);b.hp=68+invasionState.wave*5;b.maxHp=b.hp;b.weapon=invasionState.wave>3?'rifle':'pistol';bots.push(b);
+    const b=createBot(x,z);b.hp=68+invasionState.wave*5;b.maxHp=b.hp;b.weapon=invasionState.wave>=3?'rifle':'pistol';b.label='Guarda da '+(invasionMap==='mansion'?'Mansão':invasionMap==='bank'?'Banco':'Prefeitura');const oldGun=b.mesh.children[2];if(oldGun)b.mesh.remove(oldGun);const guardGun=createWeaponMesh(b.weapon,true);guardGun.position.set(.5,1.4,-.6);b.mesh.add(guardGun);bots.push(b);
   }
   invasionState.spawned+=n;
   invasionState.nextWave=performance.now()+22000;
@@ -2215,8 +2229,9 @@ function gameLoop() {
             const botW = weaponData[bot.weapon];
             if (dPlayer < (selectedMode==='invasion'?32:45) && now - bot.lastShot > botW.rate + 400) {
                 bot.lastShot = now;
-                if (botW.isRpg) createExplosion(yawObject.position);
-                else damagePlayer(botW.damage * 0.4);
+                const source={killer:bot.label||'Inimigo',weapon:botW.name};
+                if (botW.isRpg) createExplosion(yawObject.position,source);
+                else {const botDamage=bot.weapon==='homecase'?22:Math.min(botW.damage*0.4,36);damagePlayer(botDamage,source);}
             }
         });
     } else if (selectedMode === 'zombie') {
@@ -2236,7 +2251,7 @@ function gameLoop() {
             zombie.mesh.lookAt(player.x, 0, player.z);
 
             if (zombie.type === 'toxic' && len < 15 && Math.random() < 0.015) {
-                damagePlayer(6);
+                damagePlayer(6,{killer:'Zumbi tóxico',weapon:'Projétil tóxico'});
                 playSound('hit');
             }
 
@@ -2245,9 +2260,9 @@ function gameLoop() {
                 if (zombie.type === 'explosive') {
                     zombie.alive = false;
                     scene.remove(zombie.mesh);
-                    createExplosion(zombie.mesh.position);
+                    createExplosion(zombie.mesh.position,{killer:'Zumbi explosivo',weapon:'Explosão'});
                 } else {
-                    damagePlayer(zombie.damage);
+                    damagePlayer(zombie.damage,{killer:(zombie.type==='tank'?'Zumbi tanque':zombie.type==='runner'?'Zumbi corredor':zombie.type==='toxic'?'Zumbi tóxico':'Zumbi'),weapon:zombie.type==='explosive'?'Explosão': 'Garras'});
                     playSound('zombieGroan');
                 }
             }
@@ -2272,8 +2287,7 @@ function gameLoop() {
     updateHUD();
 
     if (player.hp <= 0) {
-        showMessage(selectedMode === 'defense' ? "💥 SEU CARRO FOI DESTRUÍDO!" : "VOCÊ FOI ELIMINADO!");
-        setTimeout(window.backLobby, 2500);
+        if(!deathScreenShown){deathScreenShown=true;gameRunning=false;const ds=document.getElementById('deathScreen');document.getElementById('deathKiller').textContent=lastDamageInfo.killer||'Ambiente';document.getElementById('deathWeapon').textContent=lastDamageInfo.weapon||'Perigo do mapa';ds.style.display='flex';setTimeout(()=>{if(!gameRunning&&ds.style.display==='flex')window.backLobby();},6500);}
         return;
     } else if (selectedMode === 'br' && bots.filter(b => b.alive).length === 0) {
         showMessage("🏆 VITÓRIA ROYALE!");
@@ -2286,7 +2300,9 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-function damagePlayer(amount) {
+function damagePlayer(amount, source=null) {
+    if(amount>0 && source)lastDamageInfo={killer:source.killer||'Inimigo',weapon:source.weapon||'Arma desconhecida'};
+    else if(amount>0 && !source)lastDamageInfo={killer:'Ambiente',weapon:'Perigo do mapa'};
     if(selectedMode==='king') amount*=0.72; // Colete e capacete reduzem 28% do dano
     if(selectedMode==='br'||selectedMode==='freeplay') amount*=1-getArmorReduction();
     if (player.shield > 0) {
