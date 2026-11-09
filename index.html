@@ -35,9 +35,15 @@
         #crosshair::after { top: 0; left: 9px; width: 2px; height: 20px; }
         
         /* FIXED SNIPER SCOPE OVERLAY */
-        #scopeOverlay { position: fixed; inset: 0; pointer-events: none; z-index: 4; display: none; background: radial-gradient(circle at center, transparent 32%, black 35%, black 100%); }
-        #scopeOverlay::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: rgba(0,255,0,0.85); transform: translateX(-50%); }
-        #scopeOverlay::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: rgba(0,255,0,0.85); transform: translateY(-50%); }
+        #scopeOverlay { position:fixed;inset:0;pointer-events:none;z-index:4;display:none; }
+        #scopeOverlay.scope4x {background:radial-gradient(circle at center,transparent 37%,rgba(0,0,0,.96) 39%,#000 100%)}
+        #scopeOverlay.scope4x:before {content:'';position:absolute;top:0;bottom:0;left:50%;width:1px;background:rgba(255,255,255,.85)}
+        #scopeOverlay.scope4x:after {content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(255,255,255,.85)}
+        #scopeOverlay.reddot:before {content:'';position:absolute;left:50%;top:50%;width:22px;height:22px;border:1.5px solid rgba(255,255,255,.95);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 4px #000}
+        #scopeOverlay.reddot:after {content:'';position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:50%;background:#ff3030;transform:translate(-50%,-50%);box-shadow:0 0 7px red}
+        #scopeOverlay.holo:before {content:'';position:absolute;left:50%;top:50%;width:28px;height:28px;border:1px solid rgba(56,246,255,.95);transform:translate(-50%,-50%);box-shadow:0 0 6px #000}
+        #scopeOverlay.holo:after {content:'⌖';position:absolute;left:50%;top:50%;color:#38f6ff;font:bold 28px Arial;transform:translate(-50%,-55%);text-shadow:0 0 5px #000}
+        #scopeOverlay.iron:before {content:'·';position:absolute;left:50%;top:50%;color:#fff;font-size:28px;transform:translate(-50%,-50%);text-shadow:0 0 4px #000}
 
         #hud { position: fixed; top: 16px; left: 16px; z-index: 2; background: rgba(13, 19, 29, 0.75); padding: 16px; border-radius: 14px; min-width: 220px; pointer-events: none; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); }
         .bar-container { margin: 6px 0; }
@@ -109,6 +115,13 @@
             <div id="bossPoolChoices" class="cards"></div>
         </div>
 
+
+        <div id="invasionSetup" class="section" style="display:none;border:1px solid #d69e36;background:rgba(30,24,14,.65);border-radius:14px;padding:16px">
+          <h2>🌙 PROJECT INVASION — Preparação</h2>
+          <p>Escolha o local da invasão e a arma exclusiva que levará.</p>
+          <div class="cards" id="invasionMaps"></div>
+          <h3 style="color:#f6c667">Arma da operação</h3><div class="cards" id="invasionWeapons"></div>
+        </div>
         <div class="section">
             <h2>Habilidades</h2>
             <div class="cards" id="abilities"></div>
@@ -129,10 +142,13 @@
       <button onclick="window.closeEvolutShop()" style="background:#34495e">FECHAR</button>
     </div>
     <p style="color:#cbd5e0;font-size:13px">Armas avançadas, proteção por níveis e equipamento militar raro.</p>
-    <div id="evolutItems" class="cards"></div>
+    <div class="shop-actions"><button onclick="window.setEvolutTab('shop')" id="evoTabShop">LOJA</button><button onclick="window.setEvolutTab('arsenal')" id="evoTabArsenal">ARSENAL</button></div>
+    <div id="evolutShopContent"><div id="evolutItems" class="cards"></div>
     <h2>🪖 Armadura Militar Especial</h2>
-    <p id="militaryPartsText" style="color:#d7a7ff">Partes encontradas: 0/10. Compre o projeto por 50 Evolut e procure as peças no mapa Base Militar.</p>
-    <div id="militaryArmorAction" class="shop-actions"></div>
+    <p id="militaryPartsText" style="color:#d7a7ff">Partes encontradas: 0/6. Compre o projeto por 50 Evolut e procure as 6 peças no mapa Base Militar.</p>
+    <div id="militaryArmorAction" class="shop-actions"></div></div>
+    <div id="evolutArsenalContent" style="display:none"><h2>🔫 Arsenal — Armas compradas</h2><p style="color:#cbd5e0;font-size:13px">Selecione uma arma que você já comprou para visualizar seu modelo 3D girando.</p><div id="arsenalWeapons" class="cards"></div><div style="margin-top:14px;background:#0c1420;border:1px solid #43536a;border-radius:14px;padding:12px;text-align:center"><b id="arsenalPreviewName">Selecione uma arma</b><div id="arsenalPreview" style="height:280px;width:100%;max-width:620px;margin:auto"></div></div>
+      <div class="section" style="margin-top:14px"><h2>🧩 Acessórios da arma selecionada</h2><div id="attachmentOptions" class="cards"></div></div></div>
   </div>
 </div>
 
@@ -175,8 +191,18 @@
         <button id="btnZombieShop" onclick="window.toggleZombieShop()" style="display:none; margin-top:8px; font-size:11px; padding:6px 10px; background:#2ecc71">🛒 Loja de Armas (B)</button>
     </div>
 
+    <div id="freeplayMenu" style="display:none;position:fixed;inset:0;z-index:15;background:rgba(5,10,18,.96);align-items:center;justify-content:center;padding:18px;">
+      <div style="width:min(900px,94vw);max-height:88vh;overflow:auto;background:#172334;border:1px solid #35b6a4;border-radius:16px;padding:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2 style="margin:0;border:0">🧪 MENU FREEPLAY — TUDO LIBERADO</h2><button onclick="window.closeFreeplayMenu()">FECHAR (B)</button></div>
+        <p style="color:#cbd5e0">Escolha qualquer arma ou equipamento sem gastar moedas ou Evolut. O Freeplay não altera suas compras normais.</p>
+        <h2>🔫 Armas</h2><div id="freeplayWeapons" class="cards"></div>
+        <h2>⚡ Habilidades</h2><div id="freeplayAbilities" class="cards"></div>
+        <h2>💠 Equipamentos Evolut</h2><div id="freeplaySpecials" class="cards"></div>
+        <h2>🪖 Armaduras</h2><div id="freeplayArmor" class="cards"></div>
+      </div>
+    </div>
     <div id="message"></div>
-    <div id="controls">WASD: Mover | Botão Dir: Mira (ADS) | Botão Esq: Atirar | R: Recarregar | Q: Dash | E: Cura | F: Escudo | G: Granada | X: Raio | Shift: Correr</div>
+    <div id="controls">WASD: Mover | Botão Dir: Mira (ADS) | Botão Esq: Atirar | R: Recarregar | Q: Dash | E: Cura | F: Escudo | G: Granada | X: Raio | T: PortatileSMG | Y: PortatileMissel | 1: Bote da Garra | B: Menu Freeplay | P: Voltar ao Lobby | Shift: Correr</div>
     <button id="back" onclick="window.backLobby()">Voltar ao Lobby</button>
 </div>
 
@@ -307,11 +333,14 @@ const WORLD_SIZE = 500;
 const BOT_COUNT = 28;
 
 const gameModes = {
-    br: { name: "Battle Royale", emoji: "⚔️", desc: "30 jogadores em sobrevivência livre até restar um!" },
-    zombie: { name: "Horda de Zumbis", emoji: "🧟", desc: "Sobreviva a ondas de zumbis! Ganhe tokens e compre armas no jogo." },
-    defense: { name: "Defender o Carro", emoji: "🚙", desc: "Atire nos perseguidores e proteja seu veículo!" },
-    king: { name: "Proteger o Rei", emoji: "👑", desc: "Escolte o rei até o castelo e elimine os atiradores!" },
-    boss: { name: "Modo Boss", emoji: "💀", desc: "Escolha seu veículo ou vá a pé, reúna aliados e enfrente um chefe poderoso!" }
+    br: { name: "Battle Royale", emoji: "⚔️", desc: "30 jogadores em sobrevivência livre até restar um! Recompensa: 2 Evolut." },
+    zombie: { name: "Horda de Zumbis", emoji: "🧟", desc: "Sobreviva a ondas de zumbis! Ganhe 5 Evolut a cada 5 ondas." },
+    defense: { name: "Defender o Carro", emoji: "🚙", desc: "Atire nos perseguidores e proteja seu veículo! Recompensa: 2 Evolut." },
+    king: { name: "Proteger o Rei", emoji: "👑", desc: "Escolte o rei até o castelo e elimine os atiradores! Recompensa: 1 Evolut." },
+    boss: { name: "Modo Boss", emoji: "💀", desc: "Escolha seu veículo ou vá a pé, reúna aliados e enfrente um chefe poderoso! Recompensa: 3 Evolut." },
+    sniper: { name: "Sniper", emoji: "🎯", desc: "Defenda o castelo por 2 minutos: elimine amarelos e vermelhos, deixe azuis e verdes passarem! Recompensa: 2 Evolut." },
+    freeplay: { name: "Freeplay", emoji: "🧪", desc: "Área de testes: todas as armas, habilidades e equipamentos liberados, sem inimigos agressivos." },
+    invasion: { name: "Project Invasion", emoji: "🌙", desc: "Invada locais durante a noite, elimine os guardas e complete objetivos sob reforços inimigos." }
 };
 
 const maps = {
@@ -323,7 +352,12 @@ const maps = {
     city: { name: "Cidade", emoji: "🏙️", bg: "#34495e", fog: 0x1a252f, desc: "Asfalto, arranha-céus e CARROS em movimento!" },
     farm: { name: "Fazenda", emoji: "🌾", bg: "#7f8c8d", fog: 0x4d5656, desc: "Celeiros, cercas e NÚVENS DE GÁS TÓXICO!" },
     military: { name: "Base Militar", emoji: "🪖", bg: "#59634b", fog: 0x343d31, desc: "Torres de vigia, hangares e caixas de munição extras" },
-    nuclear: { name: "Nuclear", emoji: "☢️", bg: "#66745a", fog: 0x394a37, desc: "Usina abandonada, barris tóxicos e áreas radioativas" }
+    nuclear: { name: "Nuclear", emoji: "☢️", bg: "#66745a", fog: 0x394a37, desc: "Usina abandonada, barris tóxicos e áreas radioativas" },
+    castle: { name: "Castelo", emoji: "🏰", bg: "#77736b", fog: 0x45413d, desc: "Pátio murado com tendas, barris e o Sino da Guarda que concede escudo" },
+    volcano: { name: "Vulcão", emoji: "🌋", bg: "#49302b", fog: 0x3b211d, desc: "Rios de lava entram em erupção e obrigam você a mudar de rota" },
+    swamp: { name: "Pântano", emoji: "🐊", bg: "#536044", fog: 0x344333, desc: "Água funda reduz sua velocidade e bolsões tóxicos causam dano" },
+    sky: { name: "Ilhas Celestes", emoji: "☁️", bg: "#8bb8d0", fog: 0x9bc9df, desc: "Plataformas suspensas e rajadas de vento empurram os jogadores" },
+    temple: { name: "Templo Antigo", emoji: "🏛️", bg: "#887a55", fog: 0x514936, desc: "Ative obeliscos para ganhar escudo e obeliscos antigos concedem escudo ao serem ativados" }
 };
 
 const characters = [
@@ -345,7 +379,16 @@ const weaponData = {
     deagle: { name: "Desert Eagle", price: 340, zCost: 100, damage: 95, rate: 900, mag: 7, reload: 1900, speed: 3.5, spread: 0.012, desc: "Dano altíssimo, dispara lentamente" },
     mp5: { name: "MP5", price: 260, zCost: 75, damage: 18, rate: 95, mag: 35, reload: 1350, speed: 2.7, spread: 0.035, desc: "Submetralhadora estável e rápida" },
     rotary: {name:'Metralhadora Giratória',price:0,zCost:0,damage:24,rate:90,mag:100,reload:6000,speed:3,spread:.045,desc:'Arma pesada de 100 tiros.'},
-    rpgtech: {name:'RPG Tech',price:0,zCost:0,damage:330,rate:1900,mag:5,reload:2600,speed:2,isRpg:true,desc:'Míssil teleguiado que persegue inimigos e explode no impacto.'}
+    rpgtech: {name:'RPG Tech',price:0,zCost:0,damage:330,rate:1900,mag:5,reload:2600,speed:2,isRpg:true,desc:'Míssil teleguiado que persegue inimigos e explode no impacto.'},
+    ak47: {name:'AK-47',price:390,zCost:115,damage:38,rate:82,mag:30,reload:1550,speed:3.1,spread:.035,desc:'Muito dano e alta taxa de tiro.'},
+    flamethrower: {name:'Lança-chamas',price:420,zCost:125,damage:9,rate:55,mag:100,reload:2200,speed:1.4,spread:.12,isFlame:true,desc:'Incendeia todos os inimigos atingidos.'},
+    homecase: {name:'Homecase Pistol',price:460,zCost:135,damage:260,rate:1050,mag:1,reload:1700,speed:2.8,spread:.012,closeOnly:true,desc:'Pistola de um tiro, dano absurdo a curta distância.'},
+    thompson: {name:'Thompson',price:520,zCost:0,damage:23,rate:105,mag:30,reload:1550,speed:2.7,spread:.032,desc:'Nova submetralhadora clássica da loja.'},
+    m16: {name:'M16',price:0,zCost:0,damage:34,rate:115,mag:30,reload:1450,speed:3.0,spread:.018,desc:'Fuzil exclusivo do Project Invasion.'},
+    gatling: {name:'Metralhadora Gatling',price:0,zCost:0,damage:17,rate:55,mag:180,reload:3800,speed:2.1,spread:.055,desc:'Arma pesada exclusiva do Project Invasion.'},
+    remington870: {name:'Remington 870',price:0,zCost:0,damage:22,rate:820,mag:8,reload:1750,speed:2.0,pellets:8,spread:.095,desc:'Espingarda exclusiva do Project Invasion.'},
+    colt45: {name:'Colt .45 (M1911)',price:0,zCost:0,damage:32,rate:310,mag:7,reload:1150,speed:2.4,spread:.018,desc:'Pistola exclusiva do Project Invasion.'},
+    zombieclaw: {name:'Garra de Zumbi',price:0,zCost:0,damage:75,rate:520,mag:999,reload:0,speed:1,desc:'Ataque corpo a corpo; infecta inimigos eliminados.'}
 };
 
 const abilityData = {
@@ -356,6 +399,8 @@ const abilityData = {
     lightning: { name: "Raio (X)", price: 280, desc: "Invoca um raio orbital no alvo" },
     mine: { name: "Mina Terrestre (V)", price: 320, desc: "Instala uma mina que explode quando um inimigo se aproxima" },
     fireball: { name: "Bola de Fogo (C)", price: 360, desc: "Lança uma bola flamejante que explode ao atingir inimigos" },
+    portableSMG: {name:'PortatileSMG (T)',price:0,desc:'Controla uma torreta com 200 tiros; recarga de 2 minutos.'},
+    portableMissel: {name:'PortatileMissel (Y)',price:0,desc:'Controla uma torreta de mísseis com 200 disparos; recarga de 2 minutos.'},
     speed: { name: "Velocidade", price: 180, desc: "Corra mais rápido com Shift" }
 };
 
@@ -364,23 +409,29 @@ let coins = Number(localStorage.getItem("br3d_coins") || 0);
 let ownedWeapons = JSON.parse(localStorage.getItem("br3d_weapons") || '["pistol"]');
 let equipped = localStorage.getItem("br3d_equipped") || "pistol";
 let ownedAbilities = JSON.parse(localStorage.getItem("br3d_abilities") || '["dash","heal","grenade","lightning"]');
+let equippedAbilities = JSON.parse(localStorage.getItem('br3d_equipped_abilities') || '["dash","heal"]').filter(id=>ownedAbilities.includes(id)).slice(0,2);
 let evolut = Number(localStorage.getItem('br3d_evolut') || 0);
 let evolutOwned = JSON.parse(localStorage.getItem('br3d_evolut_owned') || '[]');
 let armorOwned = JSON.parse(localStorage.getItem('br3d_armor') || '{"helmet":0,"vest":0,"military":false,"militaryProject":false}');
-let militaryParts = Number(localStorage.getItem('br3d_military_parts') || 0);
+let militaryParts = Math.min(6, Number(localStorage.getItem('br3d_military_parts') || 0));
+let weaponAttachments = JSON.parse(localStorage.getItem('br3d_weapon_attachments') || '{}');
 let bossSpawn = localStorage.getItem('br3d_boss_spawn') || 'floor';
 let bossPool = JSON.parse(localStorage.getItem('br3d_boss_pool') || '["juggernaut","tank","helicopter"]');
 let selectedMap = "forest", selectedCharacter = "soldier", selectedMode = "br";
+let invasionMap='mansion', invasionWeapon='m16', invasionState={active:false,objectives:[],completed:0,nextWave:0,wave:0,spawned:0};
+let abilitiesBeforeFreeplay=null;
 
 function saveData() {
     localStorage.setItem("br3d_coins", coins);
     localStorage.setItem("br3d_weapons", JSON.stringify(ownedWeapons));
     localStorage.setItem("br3d_equipped", equipped);
     localStorage.setItem("br3d_abilities", JSON.stringify(ownedAbilities));
+    localStorage.setItem('br3d_equipped_abilities',JSON.stringify(equippedAbilities));
     localStorage.setItem('br3d_evolut', evolut);
     localStorage.setItem('br3d_evolut_owned', JSON.stringify(evolutOwned));
     localStorage.setItem('br3d_armor', JSON.stringify(armorOwned));
     localStorage.setItem('br3d_military_parts', militaryParts);
+    localStorage.setItem('br3d_weapon_attachments', JSON.stringify(weaponAttachments));
     localStorage.setItem('br3d_boss_spawn', bossSpawn);
     localStorage.setItem('br3d_boss_pool', JSON.stringify(bossPool));
 }
@@ -420,7 +471,12 @@ window.updateLobby = function() {
         </div>
     `).join("");
 
-    document.getElementById("weapons").innerHTML = Object.entries(weaponData).filter(([id])=>!['rotary','rpgtech'].includes(id)).map(([id, w]) => {
+    const invSetup=document.getElementById('invasionSetup');
+    if(invSetup){invSetup.style.display=selectedMode==='invasion'?'block':'none';
+      document.getElementById('invasionMaps').innerHTML=[['mansion','🏚️ Mansão'],['bank','🏦 Banco'],['cityhall','🏛️ Prefeitura']].map(([id,label])=>`<div class="item ${invasionMap===id?'selected':''}"><b>${label}</b><button onclick="window.chooseInvasionMap('${id}')">${invasionMap===id?'Selecionado':'Escolher'}</button></div>`).join('');
+      document.getElementById('invasionWeapons').innerHTML=['m16','gatling','remington870','colt45'].map(id=>{const w=weaponData[id];return `<div class="item ${invasionWeapon===id?'selected':''}"><b>${w.name}</b><p>${w.desc}</p><button onclick="window.chooseInvasionWeapon('${id}')">${invasionWeapon===id?'Selecionada':'Levar'}</button></div>`;}).join('');}
+
+    document.getElementById("weapons").innerHTML = Object.entries(weaponData).filter(([id])=>!['rotary','rpgtech','zombieclaw','m16','gatling','remington870','colt45'].includes(id)).map(([id, w]) => {
         let owned = ownedWeapons.includes(id);
         return `
             <div class="item ${equipped === id ? 'selected' : ''}">
@@ -434,45 +490,58 @@ window.updateLobby = function() {
         `;
     }).join("");
 
-    document.getElementById("abilities").innerHTML = Object.entries(abilityData).map(([id, a]) => {
-        let owned = ownedAbilities.includes(id);
-        return `
-            <div class="item">
-                <b>${a.name}</b>
-                <p>${a.desc}</p>
-                <small style="color:#f1c40f">${owned ? 'Desbloqueada' : '🪙 ' + a.price}</small>
-                <button onclick="${owned ? `alert('${a.name} já liberada!')` : `window.buyAbility('${id}')`}">
-                    ${owned ? 'Liberada' : 'Comprar'}
-                </button>
-            </div>
-        `;
+    const activeAbilityCount=equippedAbilities.length;
+    document.getElementById("abilities").innerHTML = `<div style="grid-column:1/-1;text-align:center;color:#d7a7ff;font-weight:bold;margin-bottom:8px">Habilidades equipadas: ${activeAbilityCount}/2 <button onclick="window.clearAbilities()" style="margin-left:8px;background:#7f2935">Desequipar todas</button></div>` + Object.entries(abilityData).map(([id, a]) => {
+        let owned = ownedAbilities.includes(id), equippedNow=equippedAbilities.includes(id);
+        return `<div class="item ${equippedNow?'selected':''}"><b>${a.name}</b><p>${a.desc}</p><small style="color:#f1c40f">${owned ? (equippedNow?'EQUIPADA':'Desbloqueada') : (['portableSMG','portableMissel'].includes(id)?'💠 Compre na Loja Evolut':'🪙 ' + a.price)}</small><button onclick="${owned ? `window.toggleAbility('${id}')` : (['portableSMG','portableMissel'].includes(id)?'window.openEvolutShop()':`window.buyAbility('${id}')`)}">${owned ? (equippedNow?'Desequipar':'Equipar') : (['portableSMG','portableMissel'].includes(id)?'Abrir Loja Evolut':'Comprar')}</button></div>`;
     }).join("");
 };
 
 const evolutCatalog = [
  {id:'rotary',name:'Metralhadora Giratória',cost:20,desc:'100 balas, alta cadência. Arma especial para Battle Royale.'},
  {id:'rpgtech',name:'RPG Tech',cost:30,desc:'Míssil inteligente que persegue o inimigo.'},
+ {id:'zombieclaw',name:'Garra de Zumbi',cost:45,desc:'Ataque corpo a corpo, bote para frente e infecte inimigos eliminados.'},
+ {id:'portableSMG',name:'PortatileSMG',cost:50,desc:'Habilidade: controla uma torreta com 200 tiros. Recarga de 2 minutos.'},
+ {id:'portableMissel',name:'PortatileMissel',cost:50,desc:'Habilidade: controla uma torreta de mísseis com 200 disparos. Recarga de 2 minutos.'},
 ];
-window.openEvolutShop=function(){document.getElementById('evolutShop').style.display='flex';renderEvolutShop();};
+window.openEvolutShop=function(){document.getElementById('evolutShop').style.display='flex';window.setEvolutTab('shop');renderEvolutShop();};
 window.closeEvolutShop=function(){document.getElementById('evolutShop').style.display='none';};
+let arsenalRenderer=null,arsenalScene=null,arsenalCamera=null,arsenalModel=null,arsenalFrame=0,arsenalSelected='';
+window.setEvolutTab=function(tab){document.getElementById('evolutShopContent').style.display=tab==='shop'?'block':'none';document.getElementById('evolutArsenalContent').style.display=tab==='arsenal'?'block':'none';document.getElementById('evoTabShop').style.filter=tab==='shop'?'brightness(1.3)':'brightness(.75)';document.getElementById('evoTabArsenal').style.filter=tab==='arsenal'?'brightness(1.3)':'brightness(.75)';if(tab==='arsenal'){renderArsenal();}};
+function renderArsenal(){const ids=ownedWeapons.filter(id=>id!=='pistol'&&weaponData[id]);const box=document.getElementById('arsenalWeapons');box.innerHTML=ids.length?ids.map(id=>`<div class="item ${arsenalSelected===id?'selected':''}"><b>${weaponData[id].name}</b><p>${weaponData[id].desc}</p><button onclick="window.previewArsenalWeapon('${id}')">Visualizar</button></div>`).join(''):'<p style="grid-column:1/-1;text-align:center;color:#cbd5e0">Você ainda não comprou armas. Compre armas na loja para vê-las aqui.</p>';if(!arsenalSelected&&ids.length)window.previewArsenalWeapon(ids[0]);else renderAttachmentOptions();}
+window.previewArsenalWeapon=function(id){if(!ownedWeapons.includes(id)||!weaponData[id])return;arsenalSelected=id;document.getElementById('arsenalPreviewName').textContent=weaponData[id].name;const host=document.getElementById('arsenalPreview');if(!arsenalRenderer){arsenalScene=new THREE.Scene();arsenalScene.background=new THREE.Color(0x0c1420);arsenalCamera=new THREE.PerspectiveCamera(42,1,.1,100);arsenalCamera.position.set(1.8,1.2,2.7);arsenalCamera.lookAt(0,0,0);arsenalRenderer=new THREE.WebGLRenderer({antialias:true,alpha:false});arsenalRenderer.setPixelRatio(Math.min(devicePixelRatio||1,2));host.appendChild(arsenalRenderer.domElement);arsenalScene.add(new THREE.HemisphereLight(0xffffff,0x344050,2));const light=new THREE.DirectionalLight(0xffffff,2);light.position.set(3,5,4);arsenalScene.add(light);}if(arsenalModel)arsenalScene.remove(arsenalModel);arsenalModel=createWeaponMesh(id,true,true);arsenalModel.position.set(0,0,0);arsenalModel.scale.setScalar(2.5);arsenalScene.add(arsenalModel);const w=host.clientWidth||560,h=host.clientHeight||280;arsenalRenderer.setSize(w,h);arsenalCamera.aspect=w/h;arsenalCamera.updateProjectionMatrix();if(!arsenalFrame){const spin=()=>{if(document.getElementById('evolutShop').style.display!=='flex'||document.getElementById('evolutArsenalContent').style.display==='none'){arsenalFrame=0;return;}if(arsenalModel)arsenalModel.rotation.y+=.012;if(arsenalRenderer)arsenalRenderer.render(arsenalScene,arsenalCamera);arsenalFrame=requestAnimationFrame(spin);};arsenalFrame=requestAnimationFrame(spin);}renderArsenalCardsOnly();renderAttachmentOptions();};
+function renderArsenalCardsOnly(){const ids=ownedWeapons.filter(id=>id!=='pistol'&&weaponData[id]);document.getElementById('arsenalWeapons').innerHTML=ids.map(id=>`<div class="item ${arsenalSelected===id?'selected':''}"><b>${weaponData[id].name}</b><p>${weaponData[id].desc}</p><button onclick="window.previewArsenalWeapon('${id}')">Visualizar</button></div>`).join('');}
+const attachmentCatalog={
+ sight:[{id:'redDot',name:'Mira Red Dot',cost:65,desc:'Ponto vermelho compacto.'},{id:'holo',name:'Mira Holográfica',cost:95,desc:'Retículo holográfico.'},{id:'scope',name:'Mira 4x',cost:140,desc:'Luneta de aumento.'}],
+ mag:[{id:'extended',name:'Pente Estendido',cost:75,desc:'+50% de munição.'},{id:'drum',name:'Pente Tambor',cost:125,desc:'+100% de munição.'},{id:'quick',name:'Pente Rápido',cost:100,desc:'Recarga 25% mais rápida.'}]
+};
+const attachmentRules={pistol:{sight:false,mag:false},deagle:{sight:false,mag:false},homecase:{sight:false,mag:false},shotgun:{sight:false,mag:true},sniper:{sight:true,mag:false},rpg:{sight:false,mag:false},rpgtech:{sight:false,mag:false},rotary:{sight:false,mag:false},zombieclaw:{sight:false,mag:false},flamethrower:{sight:false,mag:false}};
+function canAttach(weapon,slot){return attachmentRules[weapon]?.[slot]??true;}
+function renderAttachmentOptions(){const host=document.getElementById('attachmentOptions');if(!host)return;if(!arsenalSelected||!ownedWeapons.includes(arsenalSelected)){host.innerHTML='<p>Selecione uma arma comprada.</p>';return;}const current=weaponAttachments[arsenalSelected]||{};let html='';['sight','mag'].forEach(slot=>{const title=slot==='sight'?'🔭 MIRAS':'📦 PENTES';html+=`<div class="item"><b>${title}</b>`;if(!canAttach(arsenalSelected,slot)){html+='<p>Esta arma não aceita este tipo de acessório.</p>';}else{html+=`<p>Atual: ${current[slot]?attachmentCatalog[slot].find(x=>x.id===current[slot])?.name||current[slot]:'Nenhum'}</p>`;if(current[slot])html+=`<button onclick="window.removeAttachment('${arsenalSelected}','${slot}')" style="background:#7f2935">Desequipar</button>`;attachmentCatalog[slot].forEach(a=>{html+=`<button onclick="window.buyAttachment('${arsenalSelected}','${slot}','${a.id}')" style="margin-top:5px">${a.name} — ${a.cost} moedas</button>`;});}html+='</div>';});host.innerHTML=html;}
+window.buyAttachment=function(weapon,slot,id){if(!ownedWeapons.includes(weapon)||!canAttach(weapon,slot))return;const a=attachmentCatalog[slot].find(x=>x.id===id);if(!a)return;if(coins<a.cost){alert('Moedas insuficientes!');return;}coins-=a.cost;weaponAttachments[weapon]=weaponAttachments[weapon]||{};weaponAttachments[weapon][slot]=id;saveData();window.previewArsenalWeapon(weapon);renderAttachmentOptions();window.updateLobby();};
+window.removeAttachment=function(weapon,slot){if(!weaponAttachments[weapon])return;delete weaponAttachments[weapon][slot];saveData();window.previewArsenalWeapon(weapon);renderAttachmentOptions();};
+function getWeaponStats(id){const base=weaponData[id],stats={...base},a=weaponAttachments[id]||{};if(a.mag==='extended')stats.mag=Math.ceil(stats.mag*1.5);if(a.mag==='drum')stats.mag*=2;if(a.mag==='quick')stats.reload=Math.round(stats.reload*.75);if(a.sight==='redDot')stats.spread=(stats.spread||0)*.85;if(a.sight==='holo')stats.spread=(stats.spread||0)*.75;if(a.sight==='scope')stats.spread=(stats.spread||0)*.6;return stats;}
+function addWeaponAttachments(group,id){const a=weaponAttachments[id]||{};const metal=new THREE.MeshStandardMaterial({color:0x303a45,metalness:.8,roughness:.25});if(a.sight){const sight=new THREE.Group();const rail=new THREE.Mesh(new THREE.BoxGeometry(.12,.035,.22),metal);rail.position.y=.12;sight.add(rail);if(a.sight==='scope'){const tube=new THREE.Mesh(new THREE.CylinderGeometry(.065,.065,.3,12),metal);tube.rotation.x=Math.PI/2;tube.position.set(0,.21,-.12);sight.add(tube);}else{const frame=new THREE.Mesh(new THREE.BoxGeometry(.16,.15,.06),metal);frame.position.set(0,.22,-.12);const lens=new THREE.Mesh(new THREE.BoxGeometry(.11,.09,.025),new THREE.MeshBasicMaterial({color:a.sight==='holo'?0x36d9ff:0xff3333}));lens.position.set(0,.22,-.155);sight.add(frame,lens);}group.add(sight);}if(a.mag==='extended'||a.mag==='drum'||a.mag==='quick'){const mag=a.mag==='drum'?new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,.14,14),metal):new THREE.Mesh(new THREE.BoxGeometry(a.mag==='quick'?.09:.075,a.mag==='quick'?.22:.28,.12),metal);mag.position.set(0,-.23,.03);if(a.mag==='drum')mag.rotation.z=Math.PI/2;group.add(mag);if(a.mag==='quick'){const latch=new THREE.Mesh(new THREE.BoxGeometry(.1,.045,.14),new THREE.MeshStandardMaterial({color:0xe0b13c,metalness:.6}));latch.position.set(.06,-.22,.03);group.add(latch);}}}
+
 function renderEvolutShop(){
  document.getElementById('shopEvolut').textContent=evolut;
  const items=[...evolutCatalog];
  for(let level=1;level<=5;level++){const cost=5+(level-1)*10;items.push({id:'helmet'+level,name:'Capacete Nível '+level,cost,desc:'Reduz o dano recebido. Proteção progressiva.'},{id:'vest'+level,name:'Colete Nível '+level,cost,desc:'Reduz o dano recebido. Proteção progressiva.'});}
- document.getElementById('evolutItems').innerHTML=items.map(it=>{const owned=evolutOwned.includes(it.id);const weapon=['rotary','rpgtech'].includes(it.id);return `<div class="item"><b>${it.name}</b><p>${it.desc}</p><small style="color:#d7a7ff">💠 ${it.cost} Evolut</small>${owned?(weapon?`<button onclick="window.equipEvolutWeapon('${it.id}')">${equipped===it.id?'Equipado':'Equipar'}</button>`:'<button disabled>Comprado</button>'):`<button onclick="window.buyEvolutItem('${it.id}')">Comprar</button>`}</div>`;}).join('');
- document.getElementById('militaryPartsText').textContent=`Partes encontradas: ${militaryParts}/10. ${armorOwned.military?'Armadura militar montada!':(armorOwned.militaryProject?'Vá ao mapa Base Militar e procure as 10 partes.':'Compre o projeto por 50 Evolut e procure as peças no mapa Base Militar.')}`;
+ document.getElementById('evolutItems').innerHTML=items.map(it=>{const owned=evolutOwned.includes(it.id);const weapon=['rotary','rpgtech','zombieclaw'].includes(it.id);return `<div class="item"><b>${it.name}</b><p>${it.desc}</p><small style="color:#d7a7ff">💠 ${it.cost} Evolut</small>${owned?(weapon?`<button onclick="window.equipEvolutWeapon('${it.id}')">${equipped===it.id?'Equipado':'Equipar'}</button>`:'<button disabled>Comprado</button>'):`<button onclick="window.buyEvolutItem('${it.id}')">Comprar</button>`}</div>`;}).join('');
+ document.getElementById('militaryPartsText').textContent=`Partes encontradas: ${militaryParts}/6. ${armorOwned.military?'Armadura militar montada!':(armorOwned.militaryProject?'Vá ao mapa Base Militar e procure as 6 partes.':'Compre o projeto por 50 Evolut e procure as peças no mapa Base Militar.')}`;
  document.getElementById('militaryArmorAction').innerHTML=armorOwned.military?'<b>✅ Armadura Militar completa — redução de 90% do dano</b>':(armorOwned.militaryProject?'<b>Projeto comprado. Encontre as 10 partes na Base Militar.</b>':'<button onclick="window.buyMilitaryProject()">COMPRAR PROJETO — 50 EVOLUT</button>');
 }
-window.equipEvolutWeapon=function(id){if(!evolutOwned.includes(id)||!['rotary','rpgtech'].includes(id))return;equipped=id;saveData();window.updateLobby();renderEvolutShop();};
+window.equipEvolutWeapon=function(id){if(!evolutOwned.includes(id)||!['rotary','rpgtech','zombieclaw'].includes(id))return;equipped=id;saveData();window.updateLobby();renderEvolutShop();};
 window.buyEvolutItem=function(id){
  const it=[...evolutCatalog];for(let level=1;level<=5;level++){const cost=5+(level-1)*10;it.push({id:'helmet'+level,cost},{id:'vest'+level,cost});}
  const item=it.find(x=>x.id===id);if(!item||evolutOwned.includes(id))return;if(evolut<item.cost){alert('Evolut insuficiente!');return;}
  evolut-=item.cost;evolutOwned.push(id);
- if(id==='rotary'||id==='rpgtech'){if(!ownedWeapons.includes(id))ownedWeapons.push(id);}
+ if(['rotary','rpgtech','zombieclaw'].includes(id)){if(!ownedWeapons.includes(id))ownedWeapons.push(id);}
+ if(id==='portableSMG'||id==='portableMissel'){if(!ownedAbilities.includes(id))ownedAbilities.push(id);if(equippedAbilities.length<2&&!equippedAbilities.includes(id))equippedAbilities.push(id);}
  const m=id.match(/^(helmet|vest)([1-5])$/);if(m){armorOwned[m[1]]=Math.max(armorOwned[m[1]],Number(m[2]));}
  saveData();renderEvolutShop();window.updateLobby();
 };
-window.buyMilitaryProject=function(){if(armorOwned.militaryProject)return;if(evolut<50){alert('Você precisa de 50 Evolut!');return;}evolut-=50;armorOwned.militaryProject=true;if(militaryParts>=10)armorOwned.military=true;saveData();renderEvolutShop();};
+window.buyMilitaryProject=function(){if(armorOwned.militaryProject)return;if(evolut<50){alert('Você precisa de 50 Evolut!');return;}evolut-=50;armorOwned.militaryProject=true;if(militaryParts>=6)armorOwned.military=true;saveData();renderEvolutShop();};
 function renderBossSetup(){
  const choices=[['floor','A PÉ'],['tank','TANQUE'],['helicopter','HELICÓPTERO']];
  document.getElementById('bossSpawnChoices').innerHTML=choices.map(([id,label])=>`<button onclick="window.setBossSpawn('${id}')" style="background:${bossSpawn===id?'linear-gradient(135deg,#27ae60,#16834b)':'linear-gradient(135deg,#8e44ad,#512b78)'}">${label}${bossSpawn===id?' ✓':''}</button>`).join('');
@@ -483,11 +552,14 @@ window.setBossSpawn=function(id){bossSpawn=id;saveData();renderBossSetup();};
 window.toggleBossPool=function(id){if(bossPool.includes(id)){if(bossPool.length===1){alert('Deixe pelo menos um chefe selecionado.');return;}bossPool=bossPool.filter(x=>x!==id);}else bossPool.push(id);saveData();renderBossSetup();};
 function awardEvolut(amount=1,reason='Modo concluído'){evolut+=amount;saveData();showMessage(`💠 +${amount} EVOLUT — ${reason}!`);}
 function awardEvolutOnce(amount=1,reason='Modo concluído'){if(modeCompletionAwarded)return;modeCompletionAwarded=true;awardEvolut(amount,reason);}
-function getArmorReduction(){if(armorOwned.military)return .90;const h=(armorOwned.helmet||0)*.05,v=(armorOwned.vest||0)*.05;return Math.min(.70,h+v);}
+let freeplayArmorReduction=0;
+function getArmorReduction(){if(selectedMode==='freeplay')return freeplayArmorReduction;if(armorOwned.military)return .90;const h=(armorOwned.helmet||0)*.05,v=(armorOwned.vest||0)*.05;return Math.min(.70,h+v);}
 
 window.selectCharacter = function(id) { selectedCharacter = id; window.updateLobby(); };
 window.selectMap = function(id) { selectedMap = id; window.updateLobby(); };
 window.selectMode = function(id) { selectedMode = id; window.updateLobby(); };
+window.chooseInvasionMap=id=>{if(['mansion','bank','cityhall'].includes(id)){invasionMap=id;window.updateLobby();}};
+window.chooseInvasionWeapon=id=>{if(['m16','gatling','remington870','colt45'].includes(id)){invasionWeapon=id;window.updateLobby();}};
 window.buyWeapon = function(id) {
     let w = weaponData[id];
     if (coins < w.price) { alert("Moedas insuficientes!"); return; }
@@ -495,10 +567,13 @@ window.buyWeapon = function(id) {
     saveData(); window.updateLobby();
 };
 window.equipWeapon = function(id) { if(ownedWeapons.includes(id)) { equipped = id; saveData(); window.updateLobby(); } };
+window.toggleAbility=function(id){if(!ownedAbilities.includes(id))return;if(equippedAbilities.includes(id))equippedAbilities=equippedAbilities.filter(x=>x!==id);else{if(equippedAbilities.length>=2){alert('Você só pode equipar 2 habilidades. Desequipe uma primeiro.');return;}equippedAbilities.push(id);}saveData();window.updateLobby();};
+window.clearAbilities=function(){equippedAbilities=[];saveData();window.updateLobby();};
 window.buyAbility = function(id) {
     let a = abilityData[id];
     if (coins < a.price) { alert("Moedas insuficientes!"); return; }
     coins -= a.price; ownedAbilities.push(id);
+    if(equippedAbilities.length<2)equippedAbilities.push(id);
     saveData(); window.updateLobby();
 };
 
@@ -529,10 +604,20 @@ let defenseState = { active:false, startedAt:0, duration:120000, nextSpawn:0, de
 let kingState={active:false,king:null,kingHp:220,startedAt:0,nextSpawn:0,snipers:[],distance:0};
 let bossState={active:false,boss:null,type:null,companions:[],lastAttack:0,lastPlayerShot:0,vehicle:null,vehicleType:'floor',weaponSlot:1,startedAt:0};
 let militaryPartMeshes=[];
+let specialMapZones=[];
+let mapMechanicState={lastDamage:0,lastPulse:0,windDir:1};
 let modeCompletionAwarded=false;
+let sniperState={active:false,enemies:[],snipers:[],start:0,ends:0,eliminated:0,escaped:0,nextAttackerSpawn:0};
+let castleBell=null;
+let burningTargets=[];
+let infectedAllies=[];
+let freeplayDummies=[],freeplayBullets=[],freeplayMenuOpen=false;
+let portableTurret=null;
+let portableCooldown={portableSMG:0,portableMissel:0};
+let turretControl=false;
 
 const HIP_POSITION = new THREE.Vector3(0.2, -0.22, -0.4);
-const ADS_POSITION = new THREE.Vector3(0, -0.12, -0.25);
+const ADS_POSITION = new THREE.Vector3(0.20, -0.30, -0.48);
 
 function rand(min, max) { return Math.random() * (max - min) + min; }
 function dist2D(a, b) { return Math.hypot(a.x - b.x, a.z - b.z); }
@@ -547,8 +632,9 @@ function showMessage(msg) {
 }
 
 // --- 3D WEAPON MESH GENERATOR ---
-function createWeaponMesh(weaponId, isForBot = false) {
+function createWeaponMesh(weaponId, isForBot = false, isPreview = false) {
     const group = new THREE.Group();
+    if(weaponId==='zombieclaw'){const clawMat=new THREE.MeshStandardMaterial({color:0x8eaa75,metalness:.2,roughness:.8});for(let i=0;i<4;i++){const talon=new THREE.Mesh(new THREE.ConeGeometry(.055,.48,7),clawMat);talon.rotation.x=Math.PI/2;talon.position.set(.16+i*.08,-.1,-.35-i*.035);group.add(talon);}const glove=new THREE.Mesh(new THREE.BoxGeometry(.34,.24,.35),new THREE.MeshStandardMaterial({color:0x303b2b}));glove.position.set(.25,-.22,-.25);group.add(glove);group.position.copy(HIP_POSITION);return group;}
     const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f2421, roughness: 0.5, metalness: 0.8 });
     const metalMat = new THREE.MeshStandardMaterial({ color: 0x4a5568, roughness: 0.3, metalness: 0.9 });
     const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.8 });
@@ -610,11 +696,21 @@ function createWeaponMesh(weaponId, isForBot = false) {
         const body=new THREE.Mesh(new THREE.BoxGeometry(0.11,0.15,0.32),metalMat); body.position.y=-0.01;
         const slide=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.1,0.34),darkMat); slide.position.set(0,0.07,-0.02);
         const grip=new THREE.Mesh(new THREE.BoxGeometry(0.09,0.2,0.12),woodMat); grip.position.set(0,-0.15,0.07); group.add(body,slide,grip);
+    } else if (weaponId === 'thompson') {
+        const body=new THREE.Mesh(new THREE.BoxGeometry(.12,.16,.52),woodMat);const barrel=new THREE.Mesh(new THREE.CylinderGeometry(.022,.022,.38,10),metalMat);barrel.rotation.x=Math.PI/2;barrel.position.z=-.43;const drum=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.09,16),metalMat);drum.rotation.z=Math.PI/2;drum.position.set(0,-.16,-.04);const stock=new THREE.Mesh(new THREE.BoxGeometry(.1,.1,.25),woodMat);stock.position.z=.35;group.add(body,barrel,drum,stock);
+    } else if (weaponId === 'm16' || weaponId==='gatling' || weaponId==='remington870' || weaponId==='colt45') {
+        const body=new THREE.Mesh(new THREE.BoxGeometry(.12,.16,weaponId==='gatling'?.75:.55),darkMat);const barrel=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,weaponId==='gatling'?.75:.45,10),metalMat);barrel.rotation.x=Math.PI/2;barrel.position.z=-.48;group.add(body,barrel);
     } else if (weaponId === 'mp5') {
         const body=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.15,0.48),darkMat);
         const barrel=new THREE.Mesh(new THREE.CylinderGeometry(0.018,0.018,0.3),metalMat); barrel.rotation.x=Math.PI/2; barrel.position.z=-0.36;
         const mag=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.24,0.1),metalMat); mag.position.set(0,-0.15,-0.02);
         const stock=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.22),darkMat); stock.position.z=0.32; group.add(body,barrel,mag,stock);
+    } else if (weaponId === 'ak47') {
+        const body=new THREE.Mesh(new THREE.BoxGeometry(.1,.15,.68),darkMat);const stock=new THREE.Mesh(new THREE.BoxGeometry(.09,.12,.25),woodMat);stock.position.z=.42;const mag=new THREE.Mesh(new THREE.BoxGeometry(.07,.28,.13),metalMat);mag.position.set(0,-.17,-.04);mag.rotation.x=-.16;const barrel=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,.48,10),metalMat);barrel.rotation.x=Math.PI/2;barrel.position.z=-.55;group.add(body,stock,mag,barrel);
+    } else if (weaponId === 'flamethrower') {
+        const tank=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.48,12),greenMat);tank.rotation.z=Math.PI/2;tank.position.set(-.14,-.02,.12);const body=new THREE.Mesh(new THREE.BoxGeometry(.16,.18,.48),darkMat);const nozzle=new THREE.Mesh(new THREE.CylinderGeometry(.055,.09,.55,10),metalMat);nozzle.rotation.x=Math.PI/2;nozzle.position.z=-.42;group.add(tank,body,nozzle);
+    } else if (weaponId === 'homecase') {
+        const body=new THREE.Mesh(new THREE.BoxGeometry(.13,.16,.34),metalMat);const slide=new THREE.Mesh(new THREE.BoxGeometry(.12,.09,.32),darkMat);slide.position.y=.08;const grip=new THREE.Mesh(new THREE.BoxGeometry(.1,.22,.14),woodMat);grip.position.set(0,-.16,.07);group.add(body,slide,grip);
     } else if (weaponId === 'sniper') {
         const body = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, 0.8), darkMat);
         const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.6), metalMat);
@@ -629,6 +725,7 @@ function createWeaponMesh(weaponId, isForBot = false) {
         group.add(body, drum);
     }
 
+    if((!isForBot||isPreview)&&weaponAttachments[weaponId]) addWeaponAttachments(group,weaponId);
     if (!isForBot) group.position.copy(HIP_POSITION);
     else group.scale.set(1.5, 1.5, 1.5);
     return group;
@@ -636,8 +733,18 @@ function createWeaponMesh(weaponId, isForBot = false) {
 
 // --- MAP & ENVIRONMENT BUILDER ---
 function buildWorld() {
-    obstacles = []; campfires = []; pickups = []; rockets = []; grenades = []; lightnings = []; landmines = []; explosions = []; cars = []; gasZones = [];
+    obstacles = []; campfires = []; pickups = []; rockets = []; grenades = []; lightnings = []; landmines = []; explosions = []; cars = []; gasZones = []; specialMapZones=[];mapMechanicState={lastDamage:0,lastPulse:0,windDir:1};
 
+    if (selectedMode === 'freeplay') {
+        scene.background=new THREE.Color(0x68757b);scene.fog=new THREE.Fog(0x68757b,90,240);
+        const ground=new THREE.Mesh(new THREE.PlaneGeometry(150,150),new THREE.MeshStandardMaterial({color:0x555d58,roughness:.95}));ground.rotation.x=-Math.PI/2;scene.add(ground);
+        const wallMat=new THREE.MeshStandardMaterial({color:0x707b80,roughness:.9});
+        [{x:0,z:-72,w:150,d:5},{x:0,z:72,w:150,d:5},{x:-72,z:0,w:5,d:150},{x:72,z:0,w:5,d:150}].forEach(q=>{const m=new THREE.Mesh(new THREE.BoxGeometry(q.w,13,q.d),wallMat);m.position.set(q.x,6.5,q.z);scene.add(m);});
+        freeplayDummies=[];freeplayBullets=[];
+        function dummy(x,z,shooter=false){const g=new THREE.Group(),mat=new THREE.MeshStandardMaterial({color:shooter?0xe74c3c:0xd5d9dc});const torso=new THREE.Mesh(new THREE.BoxGeometry(.9,1.5,.55),mat);torso.position.y=1;const head=new THREE.Mesh(new THREE.SphereGeometry(.3,10,8),new THREE.MeshStandardMaterial({color:0xb88968}));head.position.y=1.95;const gun=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,.9),new THREE.MeshStandardMaterial({color:0x20252b,metalness:.6}));gun.position.set(.45,1.35,-.5);g.add(torso,head,gun);g.position.set(x,0,z);scene.add(g);freeplayDummies.push({mesh:g,hp:1000,maxHp:1000,alive:true,shooter,nextShot:performance.now()+2000});}
+        dummy(-18,-12);dummy(18,-12);dummy(-18,-35);dummy(18,-35);dummy(0,5,true);
+        return;
+    }
     if (selectedMode === 'defense') {
         defenseRoadMarks = [];
         scene.background = new THREE.Color(0x71808a);
@@ -665,7 +772,7 @@ function buildWorld() {
     ground.receiveShadow = true;
     scene.add(ground);
 
-    const count = 90;
+    const count = selectedMode==='invasion' ? 0 : 90;
     for (let i = 0; i < count; i++) {
         const x = rand(-WORLD_SIZE + 20, WORLD_SIZE - 20);
         const z = rand(-WORLD_SIZE + 20, WORLD_SIZE - 20);
@@ -700,6 +807,15 @@ function buildWorld() {
             building.position.set(x, h/2, z);
             scene.add(building);
             obstacles.push({ x, z, r: w * 0.7 });
+        } else if (selectedMap === 'castle') {
+            if (Math.random() < 0.58) {
+                const barrelMat=new THREE.MeshStandardMaterial({color:Math.random()<.5?0x8b4513:0x555b60,metalness:.25});
+                const barrel=new THREE.Mesh(new THREE.CylinderGeometry(.75,.82,1.7,12),barrelMat);barrel.position.set(x,.85,z);scene.add(barrel);obstacles.push({x,z,r:1.25});
+            } else {
+                const tent=new THREE.Group();const cloth=new THREE.MeshStandardMaterial({color:[0x9b2929,0xd4aa35,0x315d87,0x477447][Math.floor(Math.random()*4)]});
+                const roof=new THREE.Mesh(new THREE.ConeGeometry(4.2,3.8,4),cloth);roof.rotation.y=Math.PI/4;roof.position.y=4.4;tent.add(roof);
+                const pole=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,4,8),new THREE.MeshStandardMaterial({color:0x654321}));pole.position.y=2;tent.add(pole);tent.position.set(x,0,z);scene.add(tent);obstacles.push({x,z,r:3.1});
+            }
         } else if (selectedMap === 'farm') {
             const isHay = Math.random() < 0.6;
             if (isHay) {
@@ -726,7 +842,7 @@ function buildWorld() {
         for(let i=0;i<5;i++){const hangar=new THREE.Mesh(new THREE.BoxGeometry(18,9,24),olive);hangar.position.set((i%2?1:-1)*32,4.5,-70-i*55);scene.add(hangar);const roof=new THREE.Mesh(new THREE.ConeGeometry(15,5,4),steel);roof.rotation.y=Math.PI/4;roof.position.set(hangar.position.x,11,-70-i*55);scene.add(roof);}
         for(let x of [-65,65]){const tower=new THREE.Group();const base=new THREE.Mesh(new THREE.BoxGeometry(3,14,3),steel);base.position.y=7;tower.add(base);const cabin=new THREE.Mesh(new THREE.BoxGeometry(7,3,7),olive);cabin.position.y=15;tower.add(cabin);tower.position.set(x,0,-35);scene.add(tower);}
         for(let i=0;i<12;i++)spawnPickup(rand(-90,90),rand(-160,160),'coin');
-        militaryPartMeshes=[];if(armorOwned.militaryProject&&!armorOwned.military){for(let i=0;i<10-militaryParts;i++)spawnPickup(rand(-145,145),rand(-210,210),'militaryPart');}
+        militaryPartMeshes=[];if(armorOwned.militaryProject&&!armorOwned.military){for(let i=0;i<6-militaryParts;i++)spawnPickup(rand(-85,85),rand(-115,115),'militaryPart');}
     }
     if(selectedMap==='nuclear'){
         const toxic=new THREE.MeshStandardMaterial({color:0x7cae35,emissive:0x263d0b,roughness:0.4});
@@ -734,6 +850,44 @@ function buildWorld() {
         const dome=new THREE.Mesh(new THREE.SphereGeometry(16,20,12,0,Math.PI*2,0,Math.PI/2),new THREE.MeshStandardMaterial({color:0x9da8a1,metalness:0.5}));dome.position.set(0,32,-100);scene.add(dome);
         for(let i=0;i<14;i++){const barrel=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.1,2.5,12),toxic);barrel.position.set(rand(-100,100),1.25,rand(-180,180));scene.add(barrel);gasZones.push({x:barrel.position.x,z:barrel.position.z,r:8});}
         const pipeMat=new THREE.MeshStandardMaterial({color:0x59645d,metalness:0.7});for(let i=0;i<7;i++){const pipe=new THREE.Mesh(new THREE.CylinderGeometry(0.7,0.7,35,10),pipeMat);pipe.rotation.z=Math.PI/2;pipe.position.set(rand(-70,70),rand(5,18),rand(-160,100));scene.add(pipe);}
+    }
+    if(selectedMap==='castle'&&selectedMode!=='invasion'){
+        const stone=new THREE.MeshStandardMaterial({color:0x77736b,roughness:.92}),darkStone=new THREE.MeshStandardMaterial({color:0x4c4944});
+        // Muralha fechada em volta de todo o pátio, com torres nos cantos.
+        const walls=[{x:0,z:-150,w:300,d:8},{x:0,z:150,w:300,d:8},{x:-150,z:0,w:8,d:300},{x:150,z:0,w:8,d:300}];
+        walls.forEach(q=>{const m=new THREE.Mesh(new THREE.BoxGeometry(q.w,16,q.d),stone);m.position.set(q.x,8,q.z);scene.add(m);});
+        // Colisões segmentadas mantêm o jogador dentro das muralhas.
+        for(let t=-140;t<=140;t+=8){obstacles.push({x:t,z:-147,r:5.2},{x:t,z:147,r:5.2},{x:-147,z:t,r:5.2},{x:147,z:t,r:5.2});}
+        for(const x of [-145,145])for(const z of [-145,145]){const tower=new THREE.Mesh(new THREE.BoxGeometry(13,23,13),darkStone);tower.position.set(x,11.5,z);scene.add(tower);const roof=new THREE.Mesh(new THREE.ConeGeometry(9,8,4),new THREE.MeshStandardMaterial({color:0x633c35}));roof.position.set(x,27,z);scene.add(roof);}
+        // Portão de entrada e arquibancadas baixas para cobertura.
+        const gate=new THREE.Mesh(new THREE.BoxGeometry(34,11,5),darkStone);gate.position.set(0,5.5,-150);scene.add(gate);
+        for(let i=0;i<8;i++){const crate=new THREE.Mesh(new THREE.BoxGeometry(3,2.5,3),new THREE.MeshStandardMaterial({color:0x76502e}));const x=rand(-115,115),z=rand(-115,115);crate.position.set(x,1.25,z);scene.add(crate);obstacles.push({x,z,r:2.2});}
+        // Sino da Guarda: aproxime-se para receber escudo, com recarga de 30 segundos.
+        const bell=new THREE.Group();const gold=new THREE.MeshStandardMaterial({color:0xd4a72c,metalness:.75,roughness:.25});const cup=new THREE.Mesh(new THREE.CylinderGeometry(.8,1.15,1.6,12),gold);cup.position.y=3.2;bell.add(cup);const roof=new THREE.Mesh(new THREE.ConeGeometry(1.5,.8,8),darkStone);roof.position.y=4.5;bell.add(roof);const post=new THREE.Mesh(new THREE.CylinderGeometry(.18,.25,5,8),stone);post.position.y=2.5;bell.add(post);bell.position.set(0,0,0);scene.add(bell);castleBell={mesh:bell,nextUse:0};
+    }
+
+    if(selectedMap==='volcano'){
+        const lavaMat=new THREE.MeshStandardMaterial({color:0xff4b12,emissive:0xff2600,emissiveIntensity:1.25,roughness:.35});
+        const rockMat=new THREE.MeshStandardMaterial({color:0x292522,roughness:1});
+        for(let i=0;i<8;i++){const x=rand(-145,145),z=rand(-180,180),r=rand(7,13);const pool=new THREE.Mesh(new THREE.CylinderGeometry(r,r,0.35,24),lavaMat);pool.position.set(x,.08,z);scene.add(pool);const rim=new THREE.Mesh(new THREE.TorusGeometry(r+.5,.8,8,24),rockMat);rim.rotation.x=Math.PI/2;rim.position.set(x,.2,z);scene.add(rim);specialMapZones.push({x,z,r,type:'lava'});}
+        for(let i=0;i<5;i++){const peak=new THREE.Mesh(new THREE.ConeGeometry(rand(7,13),rand(16,28),7),rockMat);peak.position.set(rand(-150,150),peak.geometry.parameters.height/2,rand(-180,180));scene.add(peak);}
+        const volcano=new THREE.Mesh(new THREE.ConeGeometry(32,48,10),rockMat);volcano.position.set(0,24,-155);scene.add(volcano);
+    }
+    if(selectedMap==='swamp'){
+        const water=new THREE.MeshStandardMaterial({color:0x344f3b,transparent:true,opacity:.78,roughness:.2});
+        for(let i=0;i<18;i++){const x=rand(-150,150),z=rand(-180,180),r=rand(5,11);const pond=new THREE.Mesh(new THREE.CircleGeometry(r,20),water);pond.rotation.x=-Math.PI/2;pond.position.set(x,.035,z);scene.add(pond);specialMapZones.push({x,z,r,type:'mud'});}
+        const treeMat=new THREE.MeshStandardMaterial({color:0x493b2a});for(let i=0;i<28;i++){const x=rand(-160,160),z=rand(-190,190);const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.35,.7,8,7),treeMat);trunk.position.set(x,4,z);const crown=new THREE.Mesh(new THREE.SphereGeometry(2.8,8,7),new THREE.MeshStandardMaterial({color:0x314a31}));crown.position.set(x,8,z);scene.add(trunk,crown);obstacles.push({x,z,r:1});}
+    }
+    if(selectedMap==='sky'){
+        scene.background=new THREE.Color(0x91c8e8);scene.fog=new THREE.Fog(0x91c8e8,.003,520);
+        const cloudMat=new THREE.MeshStandardMaterial({color:0xf1f7fa,roughness:1});
+        for(let i=0;i<14;i++){const x=rand(-150,150),z=rand(-180,180),y=rand(10,32),r=rand(8,15);const island=new THREE.Mesh(new THREE.CylinderGeometry(r*.72,r,3,7),new THREE.MeshStandardMaterial({color:0x647c65}));island.position.set(x,y,z);scene.add(island);const top=new THREE.Mesh(new THREE.CylinderGeometry(r*.72,r*.72,.35,7),new THREE.MeshStandardMaterial({color:0x72a56a}));top.position.set(x,y+1.65,z);scene.add(top);specialMapZones.push({x,z,r:r*.7,type:'wind'});const cloud=new THREE.Mesh(new THREE.SphereGeometry(r*.8,8,6),cloudMat);cloud.position.set(x+rand(-8,8),y+8,z);scene.add(cloud);}
+        const bridgeMat=new THREE.MeshStandardMaterial({color:0x8a7458});for(let i=0;i<5;i++){const bridge=new THREE.Mesh(new THREE.BoxGeometry(12,.7,3),bridgeMat);bridge.position.set(-50+i*25,2,-25-i*20);bridge.rotation.y=.18;scene.add(bridge);}
+    }
+    if(selectedMap==='temple'){
+        const stone=new THREE.MeshStandardMaterial({color:0x9b8b65,roughness:.92}),gold=new THREE.MeshStandardMaterial({color:0xc8a94c,metalness:.55,roughness:.35});
+        for(let i=0;i<6;i++){const x=-60+i*24;const col=new THREE.Mesh(new THREE.CylinderGeometry(1.6,2,13,8),stone);col.position.set(x,6.5,-80);scene.add(col);const cap=new THREE.Mesh(new THREE.BoxGeometry(5,1,5),gold);cap.position.set(x,13.5,-80);scene.add(cap);obstacles.push({x,z:-80,r:2.2});}
+        for(let i=0;i<4;i++){const x=(i%2?1:-1)*42,z=(i<2?-35:45);const obelisk=new THREE.Group();const base=new THREE.Mesh(new THREE.BoxGeometry(3,1,3),gold);base.position.y=.5;const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.7,1.2,6,5),stone);shaft.position.y=4;const crystal=new THREE.Mesh(new THREE.OctahedronGeometry(1.1),new THREE.MeshStandardMaterial({color:0x36d9ff,emissive:0x087a9a}));crystal.position.y=7.5;obelisk.add(base,shaft,crystal);obelisk.position.set(x,0,z);scene.add(obelisk);specialMapZones.push({x,z,r:5,type:'obelisk',mesh:obelisk,used:false});obstacles.push({x,z,r:2.5});}
     }
 
     if (selectedMap === 'ice') {
@@ -795,6 +949,14 @@ function buildWorld() {
     }
 }
 
+function updateCastleMapSpecial(now){if(selectedMap!=='castle'||!castleBell||!gameRunning)return;const d=Math.hypot(yawObject.position.x-castleBell.mesh.position.x,yawObject.position.z-castleBell.mesh.position.z);if(d<5&&now>=castleBell.nextUse){castleBell.nextUse=now+30000;player.shield=Math.min(100,player.shield+35);castleBell.mesh.rotation.y+=Math.PI*2;showMessage('🔔 SINO DA GUARDA! +35 DE ESCUDO');playSound('pickup');}}
+function updateNewMapMechanics(now){if(!gameRunning)return;const x=yawObject.position.x,z=yawObject.position.z;
+ if(selectedMap==='volcano'){const hot=specialMapZones.find(q=>q.type==='lava'&&Math.hypot(x-q.x,z-q.z)<q.r);if(hot&&now-mapMechanicState.lastDamage>450){mapMechanicState.lastDamage=now;damagePlayer(7);showMessage('🔥 LAVA! SAIA DA ÁREA!');}if(now-mapMechanicState.lastPulse>9000){mapMechanicState.lastPulse=now;showMessage('🌋 ERUPÇÃO! CUIDADO COM AS POÇAS DE LAVA');}}
+ if(selectedMap==='swamp'){const mud=specialMapZones.find(q=>q.type==='mud'&&Math.hypot(x-q.x,z-q.z)<q.r);if(mud){player.speed=.15;if(now-mapMechanicState.lastDamage>900){mapMechanicState.lastDamage=now;damagePlayer(2);}}else player.speed=.23;}
+ if(selectedMap==='sky'&&now-mapMechanicState.lastPulse>6500){mapMechanicState.lastPulse=now;mapMechanicState.windDir*=-1;showMessage(mapMechanicState.windDir>0?'💨 RAJADA DE VENTO: LESTE':'💨 RAJADA DE VENTO: OESTE');}
+ if(selectedMap==='temple'){specialMapZones.filter(q=>q.type==='obelisk'&&!q.used).forEach(q=>{if(Math.hypot(x-q.x,z-q.z)<4.5){q.used=true;player.shield=Math.min(100,player.shield+25);q.mesh.children[2].material=new THREE.MeshStandardMaterial({color:0xffd34e,emissive:0x9a6500});showMessage('🔱 OBELISCO ATIVADO! +25 ESCUDO');playSound('pickup');}});}
+}
+
 function spawnPickup(x, z, type) {
     const geo = type === 'coin' ? new THREE.CylinderGeometry(0.6, 0.6, 0.2, 16) : (type==='militaryPart'?new THREE.TetrahedronGeometry(0.8):new THREE.BoxGeometry(0.8, 0.8, 0.8));
     const mat = new THREE.MeshStandardMaterial({ color: type === 'coin' ? 0xf1c40f : (type==='militaryPart'?0xd7a7ff:0x2ecc71), emissive:type==='militaryPart'?0x542080:0x000000, roughness: 0.3 });
@@ -802,6 +964,7 @@ function spawnPickup(x, z, type) {
     mesh.position.set(x, 0.5, z);
     if (type === 'coin') mesh.rotation.x = Math.PI / 2;
     scene.add(mesh);
+    if(type==='militaryPart'){const beam=new THREE.Mesh(new THREE.CylinderGeometry(.12,.5,5,8),new THREE.MeshBasicMaterial({color:0xd7a7ff,transparent:true,opacity:.28}));beam.position.set(x,3,z);scene.add(beam);mesh.userData.beacon=beam;}
     pickups.push({ mesh, x, z, type, active: true });
 }
 
@@ -1128,7 +1291,7 @@ function updateDefenseMode(now) {
     if(elapsed>=defenseState.duration){
         defenseState.active=false;
         showMessage("🏆 VOCÊ PROTEGEU O CARRO! "+defenseState.destroyed+" VEÍCULOS DESTRUÍDOS!");
-        awardEvolutOnce(1,"Modo Defender o Carro concluído");
+        awardEvolutOnce(2,"Modo Defender o Carro concluído");
         setTimeout(window.backLobby,3500);
     }
 }
@@ -1137,7 +1300,7 @@ function updateDefenseMode(now) {
 function makeKingModel(){const g=new THREE.Group();const gold=new THREE.MeshStandardMaterial({color:0xf1c40f,metalness:0.65}), cloth=new THREE.MeshStandardMaterial({color:0x542583}), skin=new THREE.MeshStandardMaterial({color:0xd9a477});const torso=new THREE.Mesh(new THREE.CylinderGeometry(.42,.55,1.15,10),cloth);torso.position.y=1.25;g.add(torso);const head=new THREE.Mesh(new THREE.SphereGeometry(.32,12,10),skin);head.position.y=2.05;g.add(head);const crown=new THREE.Mesh(new THREE.ConeGeometry(.42,.55,5),gold);crown.position.y=2.48;g.add(crown);for(let x of [-.22,.22]){const leg=new THREE.Mesh(new THREE.BoxGeometry(.2,.7,.22),cloth);leg.position.set(x,.38,0);g.add(leg);}return g;}
 function startKingEscort(){kingState={active:true,king:makeKingModel(),kingHp:220,startedAt:performance.now(),nextSpawn:performance.now()+1800,snipers:[],distance:0};kingState.king.position.set(0,0,-8);scene.add(kingState.king);yawObject.position.set(0,2,2);player.hp=100;player.shield=0;document.getElementById('healthLabel').textContent='🛡️ Vida do escolta';document.getElementById('weaponText').textContent='FAL + Colete e Capacete';document.getElementById('controls').textContent='WASD: Mover | MOUSE: Mirar | CLIQUE: Atirar | R: Recarregar | Proteja o rei até o castelo!';const castle=new THREE.Group();const stone=new THREE.MeshStandardMaterial({color:0x777b83}),roof=new THREE.MeshStandardMaterial({color:0x653c32});for(let x of [-13,13]){const tower=new THREE.Mesh(new THREE.BoxGeometry(6,22,7),stone);tower.position.set(x,11,-190);castle.add(tower);const cap=new THREE.Mesh(new THREE.ConeGeometry(5,8,4),roof);cap.position.set(x,26,-190);castle.add(cap);}const wall=new THREE.Mesh(new THREE.BoxGeometry(32,12,4),stone);wall.position.set(0,6,-190);castle.add(wall);scene.add(castle);kingState.castle=castle;}
 function spawnKingSniper(){const g=new THREE.Group();const uniform=new THREE.MeshStandardMaterial({color:0x303b31}),skin=new THREE.MeshStandardMaterial({color:0xb98765});const body=new THREE.Mesh(new THREE.BoxGeometry(.8,1.5,.5),uniform);body.position.y=1;g.add(body);const head=new THREE.Mesh(new THREE.SphereGeometry(.28,10,8),skin);head.position.y=1.95;g.add(head);const rifle=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,1.5),new THREE.MeshStandardMaterial({color:0x171717,metalness:.7}));rifle.position.set(0,1.5,-.7);g.add(rifle);const side=Math.random()<.5?-1:1;g.position.set(side*rand(13,26),0,-rand(35,105));scene.add(g);kingState.snipers.push({mesh:g,hp:90,lastShot:performance.now()+rand(700,1700),alive:true});}
-function updateKingEscort(now){if(!kingState.active)return;const k=kingState.king;k.position.z-=0.035;kingState.distance=Math.max(0,Math.floor(-k.position.z));if(now>=kingState.nextSpawn&&kingState.snipers.filter(s=>s.alive).length<7){spawnKingSniper();kingState.nextSpawn=now+rand(2600,4200);}kingState.snipers.forEach(s=>{if(!s.alive)return;s.mesh.lookAt(k.position.x,1,k.position.z);if(now-s.lastShot>2100){s.lastShot=now;if(Math.random()<0.28){damagePlayer(rand(4,7));showMessage('🪖 SEU COLETE ABSORVEU PARTE DO TIRO!');}else{kingState.kingHp-=rand(5,9);showMessage('🎯 ATIRADOR ACERTOU O REI!');}}});document.getElementById('weaponText').textContent='FAL ('+player.ammo+'/'+player.maxAmmo+')';document.getElementById('remainingLabel').textContent='👑 Vida do Rei:';document.getElementById('remaining').textContent=Math.ceil(kingState.kingHp);document.getElementById('defenseTimer').style.display='block';document.getElementById('defenseTimer').textContent='🏰 Distância: '+kingState.distance+' m';if(kingState.kingHp<=0){kingState.active=false;showMessage('💀 O REI FOI ELIMINADO!');setTimeout(window.backLobby,3000);}else if(k.position.z<=-190){kingState.active=false;showMessage('👑 O REI CHEGOU AO CASTELO! MISSÃO CONCLUÍDA!');coins+=100;matchCoins+=100;saveData();awardEvolutOnce(1,'Rei escoltado');setTimeout(window.backLobby,3500);}}
+function updateKingEscort(now){if(!kingState.active)return;const k=kingState.king;k.position.z-=0.035;kingState.distance=Math.max(0,Math.floor(-k.position.z));if(now>=kingState.nextSpawn&&kingState.snipers.filter(s=>s.alive).length<7){spawnKingSniper();kingState.nextSpawn=now+rand(2600,4200);}kingState.snipers.forEach(s=>{if(!s.alive)return;s.mesh.lookAt(k.position.x,1,k.position.z);if(now-s.lastShot>2100){s.lastShot=now;if(Math.random()<0.28){damagePlayer(rand(4,7));showMessage('🪖 SEU COLETE ABSORVEU PARTE DO TIRO!');}else{kingState.kingHp-=rand(5,9);showMessage('🎯 ATIRADOR ACERTOU O REI!');}}});document.getElementById('weaponText').textContent=(selectedMode==='invasion'?weaponData[invasionWeapon].name:'FAL')+' ('+player.ammo+'/'+player.maxAmmo+')';document.getElementById('remainingLabel').textContent='👑 Vida do Rei:';document.getElementById('remaining').textContent=Math.ceil(kingState.kingHp);document.getElementById('defenseTimer').style.display='block';document.getElementById('defenseTimer').textContent='🏰 Distância: '+kingState.distance+' m';if(kingState.kingHp<=0){kingState.active=false;showMessage('💀 O REI FOI ELIMINADO!');setTimeout(window.backLobby,3000);}else if(k.position.z<=-190){kingState.active=false;showMessage('👑 O REI CHEGOU AO CASTELO! MISSÃO CONCLUÍDA!');coins+=100;matchCoins+=100;saveData();awardEvolutOnce(1,'Rei escoltado');setTimeout(window.backLobby,3500);}}
 
 // --- BOSS MODE ---
 function makeBossModel(type){const g=new THREE.Group();const armor=new THREE.MeshStandardMaterial({color:type==='tank'?0x46543d:(type==='helicopter'?0x34495e:0x501b1b),metalness:.55,roughness:.45}),dark=new THREE.MeshStandardMaterial({color:0x15191d,metalness:.7}),red=new THREE.MeshStandardMaterial({color:0xb51f24,emissive:0x330000});
@@ -1145,7 +1308,7 @@ function makeBossModel(type){const g=new THREE.Group();const armor=new THREE.Mes
  else if(type==='helicopter'){const body=new THREE.Mesh(new THREE.SphereGeometry(4,16,12),armor);body.scale.set(1,0.8,1.6);g.add(body);const tail=new THREE.Mesh(new THREE.CylinderGeometry(.35,.6,10,8),armor);tail.rotation.x=Math.PI/2;tail.position.z=7;g.add(tail);const rotor=new THREE.Group();const blade=new THREE.Mesh(new THREE.BoxGeometry(1,0.15,22),dark);rotor.add(blade);rotor.position.y=4;g.add(rotor);g.userData.rotor=rotor;const nose=new THREE.Mesh(new THREE.SphereGeometry(2,12,8),new THREE.MeshStandardMaterial({color:0x8bb4c9,transparent:true,opacity:.65}));nose.position.z=-3;g.add(nose);}
  else{const torso=new THREE.Mesh(new THREE.BoxGeometry(4.5,6,2.8),armor);torso.position.y=4;g.add(torso);const head=new THREE.Mesh(new THREE.SphereGeometry(1.8,14,12),dark);head.position.y=8;g.add(head);const eye=new THREE.Mesh(new THREE.BoxGeometry(1.3,.25,.15),red);eye.position.set(0,8,-1.7);g.add(eye);for(let x of [-2.8,2.8]){const arm=new THREE.Mesh(new THREE.BoxGeometry(1.5,5,1.5),armor);arm.position.set(x,4.3,0);g.add(arm);}}
  return g;}
-function startBossMode(){const pool=bossPool.length?bossPool:['juggernaut'];const type=pool[Math.floor(Math.random()*pool.length)];bossState={active:true,type,boss:makeBossModel(type),companions:[],lastAttack:performance.now()+1800,lastPlayerShot:0,vehicle:null,vehicleType:bossSpawn,weaponSlot:1,startedAt:performance.now(),attackIndex:0};const boss=bossState.boss;boss.position.set(0,type==='helicopter'?12:0,-95);scene.add(boss);bossState.hp=type==='tank'?1800:(type==='helicopter'?1450:1250);bossState.maxHp=bossState.hp;
+function startBossMode(){const pool=bossPool.length?bossPool:['juggernaut'];const type=pool[Math.floor(Math.random()*pool.length)];bossState={active:true,type,boss:makeBossModel(type),companions:[],lastAttack:performance.now()+1800,lastPlayerShot:0,vehicle:null,vehicleType:bossSpawn,weaponSlot:1,startedAt:performance.now(),attackIndex:0};const boss=bossState.boss;boss.position.set(0,type==='helicopter'?12:0,-95);scene.add(boss);bossState.hp=type==='tank'?11800:(type==='helicopter'?11450:11250);bossState.maxHp=bossState.hp;
  for(let i=0;i<2;i++){const ally=createBot(rand(-5,5),rand(5,12));ally.hp=100;ally.alive=true;ally.mesh.scale.setScalar(.8);bossState.companions.push({mesh:ally.mesh,kind:'foot',lastShot:performance.now()+rand(300,1500),alive:true,hp:130,nextMove:0,destination:new THREE.Vector3(rand(-24,24),0,rand(-20,28))});}
  for(const kind of ['tank','helicopter']){const allyV=new THREE.Group();const vm=new THREE.MeshStandardMaterial({color:kind==='tank'?0x65734a:0x526b7a,metalness:.45});const body=new THREE.Mesh(new THREE.BoxGeometry(kind==='tank'?3.5:2.5,1.1,kind==='tank'?5:4),vm);body.position.y=kind==='tank'?.9:0;allyV.add(body);if(kind==='tank'){const t=new THREE.Mesh(new THREE.BoxGeometry(1.8,.8,2),vm);t.position.y=1.8;allyV.add(t);}else{const rotor=new THREE.Mesh(new THREE.BoxGeometry(.2,.08,6),new THREE.MeshStandardMaterial({color:0x16191d}));rotor.position.y=2;allyV.add(rotor);allyV.userData.rotor=rotor;}scene.add(allyV);bossState.companions.push({mesh:allyV,kind,lastShot:performance.now()+rand(500,1800),alive:true,hp:kind==='tank'?420:280,nextMove:0,destination:new THREE.Vector3(rand(-32,32),kind==='helicopter'?rand(8,14):0,rand(-30,35))});}
  if(bossSpawn==='tank'||bossSpawn==='helicopter'){const v=new THREE.Group();const mat=new THREE.MeshStandardMaterial({color:bossSpawn==='tank'?0x4c6041:0x354c5c,metalness:.5});const body=new THREE.Mesh(new THREE.BoxGeometry(bossSpawn==='tank'?4.5:3.5,1.5,bossSpawn==='tank'?7:6),mat);body.position.y=1;v.add(body);if(bossSpawn==='tank'){const turret=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.2,3),mat);turret.position.set(0,2,-.5);v.add(turret);const barrel=new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,3,10),new THREE.MeshStandardMaterial({color:0x20252a}));barrel.rotation.x=Math.PI/2;barrel.position.set(0,2,-3);v.add(barrel);}else{const rotor=new THREE.Mesh(new THREE.BoxGeometry(.3,.1,9),new THREE.MeshStandardMaterial({color:0x171b20}));rotor.position.y=3;v.add(rotor);v.userData.rotor=rotor;}
@@ -1156,7 +1319,7 @@ function startBossMode(){const pool=bossPool.length?bossPool:['juggernaut'];cons
  yawObject.position.y=bossSpawn==='tank'?2.0:6.5;}
  document.getElementById('healthLabel').textContent='❤️ Vida';document.getElementById('remainingLabel').textContent='💀 Vida do Boss:';document.getElementById('remaining').textContent=bossState.hp;document.getElementById('defenseTimer').style.display='block';document.getElementById('defenseTimer').textContent='Chefe: '+({juggernaut:'Juggernaut',tank:'Tanque Colossal',helicopter:'Helicóptero de Ataque'}[type]);document.getElementById('controls').textContent=bossSpawn==='tank'?'WASD: Dirigir tanque | Mouse: Mirar | Clique: Canhão (recarga 5s)':(bossSpawn==='helicopter'?'WASD: Pilotar | Mouse: Mirar/Atirar | 1: Metralhadora | 2: RPG | Q/E: Altitude':'WASD: Mover | Mouse: Mirar/Atirar | R: Recarregar');
 }
-function damageBoss(amount){if(!bossState.active)return;bossState.hp-=amount;showMessage('💥 CHEFE: '+Math.max(0,Math.ceil(bossState.hp))+' HP');if(bossState.hp<=0){bossState.active=false;createExplosion(bossState.boss.position);scene.remove(bossState.boss);awardEvolutOnce(1,'Chefe derrotado');showMessage('🏆 CHEFE DERROTADO! +1 EVOLUT');setTimeout(window.backLobby,3500);}}
+function damageBoss(amount){if(!bossState.active)return;bossState.hp-=amount;showMessage('💥 CHEFE: '+Math.max(0,Math.ceil(bossState.hp))+' HP');if(bossState.hp<=0){bossState.active=false;createExplosion(bossState.boss.position);scene.remove(bossState.boss);awardEvolutOnce(3,'Chefe derrotado');showMessage('🏆 CHEFE DERROTADO! +3 EVOLUT');setTimeout(window.backLobby,3500);}}
 function fireBossRocket(damage=260,guided=false){const dir=new THREE.Vector3();camera.getWorldDirection(dir);const pos=new THREE.Vector3();camera.getWorldPosition(pos);const m=new THREE.Mesh(new THREE.ConeGeometry(.16,.55,8),new THREE.MeshBasicMaterial({color:0xff6b20}));m.position.copy(pos).addScaledVector(dir,1.2);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.clone().negate());scene.add(m);rockets.push({mesh:m,dir:dir.clone(),life:220,targetBoss:true,guidedBoss:guided,bossDamage:damage});playSound('rpg');}
 function updateBossMode(now){
  if(!bossState.active)return;
@@ -1242,10 +1405,10 @@ window.startGame = function() {
     document.getElementById("btnZombieShop").style.display = selectedMode === 'zombie' ? 'inline-block' : 'none';
     document.getElementById("waveContainer").style.display = selectedMode === 'zombie' ? 'block' : 'none';
     document.getElementById("zoneContainer").style.display = selectedMode === 'br' ? 'block' : 'none';
-    document.getElementById("defenseTimer").style.display = (selectedMode === 'defense'||selectedMode==='king') ? 'block' : 'none';
+    document.getElementById("defenseTimer").style.display = (selectedMode === 'defense'||selectedMode==='king'||selectedMode==='sniper') ? 'block' : 'none';
     document.getElementById("healthLabel").textContent = selectedMode === 'defense' ? "🚙 Integridade do carro" : (selectedMode==='king'?'🛡️ Vida do escolta':'❤️ Vida');
 
-    document.getElementById("remainingLabel").textContent = selectedMode === 'br' ? "👥 Restantes:" : (selectedMode === 'defense' ? "🚗 Destruídos:" : "🧟 Zumbis:");
+    document.getElementById("remainingLabel").textContent = selectedMode === 'br' ? "👥 Restantes:" : (selectedMode === 'sniper' ? '🎯 Eliminados:' : (selectedMode === 'defense' ? "🚗 Destruídos:" : "🧟 Zumbis:"));
 
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -1274,27 +1437,31 @@ window.startGame = function() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
 
-    activeEquippedWeapon = selectedMode === 'king' ? 'fal' : ((selectedMode === 'zombie' || selectedMode === 'defense') ? 'pistol' : (selectedMode==='boss'&&bossSpawn==='floor'?equipped:equipped));
+    activeEquippedWeapon = selectedMode==='invasion'?invasionWeapon:(selectedMode === 'king' ? 'fal' : ((selectedMode === 'zombie' || selectedMode === 'defense') ? 'pistol' : (selectedMode==='boss'&&bossSpawn==='floor'?equipped:equipped)));
     if (weaponMesh) camera.remove(weaponMesh);
     weaponMesh = createWeaponMesh(activeEquippedWeapon);
     camera.add(weaponMesh);
     if(selectedMode==='boss' && bossSpawn!=='floor') weaponMesh.visible=false;
 
-    player.hp = 100; player.shield = 0; player.cold = 0; player.isAds = false;
-    player.maxAmmo = weaponData[activeEquippedWeapon].mag; player.ammo = player.maxAmmo;
+    player.hp = 100; player.shield = 0; player.cold = 0; player.speed=.23; player.isAds = false;camera.fov=75;camera.updateProjectionMatrix();document.getElementById('scopeOverlay').style.display='none';document.getElementById('crosshair').style.display='block';
+    player.maxAmmo = getWeaponStats(activeEquippedWeapon).mag; player.ammo = player.maxAmmo;
     player.reloading = false; player.reloadProgress = 0;
-    kills = 0; matchCoins = 0; zombieTokens = 0; wave = 1;
+    kills = 0; matchCoins = 0; zombieTokens = 0; wave = 1; burningTargets=[];infectedAllies=[];portableTurret=null;turretControl=false;freeplayMenuOpen=false;freeplayArmorReduction=0;document.getElementById('freeplayMenu').style.display='none';
     safeZoneRadius = WORLD_SIZE * 0.9;
     
-    yawObject.position.set(0, selectedMode === 'defense' ? 3.35 : 2.0, selectedMode === 'defense' ? 7.2 : 0);
-    player.x = 0; player.z = 0;
+    yawObject.position.set(0, selectedMode === 'defense' ? 3.35 : 2.0, selectedMode==='freeplay'?28:(selectedMode==='invasion'?20:(selectedMode === 'defense' ? 7.2 : 0)));
+    if(selectedMap==='castle'&&selectedMode==='br')yawObject.position.set(0,2,0);
+    player.x = yawObject.position.x; player.z = yawObject.position.z;
 
+    if(selectedMode==='invasion')invasionState={active:true,objectives:[],completed:0,nextWave:0,wave:0,spawned:0,lastTick:performance.now()};
     buildWorld();
+    if(selectedMap==='castle'&&selectedMode==='br'){const candidates=[[0,0],[0,12],[12,0],[-12,0],[0,-12],[18,18],[-18,18],[18,-18],[-18,-18]];const safe=candidates.find(([x,z])=>obstacles.every(o=>Math.hypot(x-o.x,z-o.z)>o.r+2));if(safe){yawObject.position.set(safe[0],2,safe[1]);player.x=safe[0];player.z=safe[1];}}
     bots = []; zombies = [];
+    if(selectedMode==='invasion')buildInvasionMap();
 
     if (selectedMode === 'br') {
         for (let i = 0; i < BOT_COUNT; i++) {
-            const r = rand(60, WORLD_SIZE - 40);
+            const r = selectedMap==='castle' ? rand(82,125) : rand(60, WORLD_SIZE - 40);
             const a = rand(0, Math.PI * 2);
             bots.push(createBot(Math.cos(a) * r, Math.sin(a) * r));
         }
@@ -1306,10 +1473,20 @@ window.startGame = function() {
         startKingEscort();
     } else if(selectedMode==='boss'){
         startBossMode();
+    } else if(selectedMode==='sniper'){
+        startSniperMode();
+    } else if(selectedMode==='invasion'){
+        player.hp=100;player.shield=0;const w=getWeaponStats(activeEquippedWeapon);player.maxAmmo=w.mag;player.ammo=w.mag;player.reloading=false;
+        document.getElementById('controls').textContent='WASD: Mover | Botão direito: Mirar | Clique: Atirar | R: Recarregar | Fique na área azul por 2,5s após eliminar os guardas | P: Lobby';
+        spawnInvasionWave();
+    } else if(selectedMode==='freeplay'){
+        activeEquippedWeapon=equipped;
+        player.maxAmmo=getWeaponStats(activeEquippedWeapon).mag;player.ammo=player.maxAmmo;
+        document.getElementById('controls').textContent='WASD: Mover | Mouse: Mirar/Atirar | R: Recarregar | B: Menu de equipamentos | P: Lobby';
     }
 
     gameRunning = true;
-    if(selectedMode !== 'defense') showMessage(selectedMode === 'zombie' ? "HORDA DE ZUMBIS: SOBREVIVA!" : (selectedMode==='king'?'ESCOLTE O REI ATÉ O CASTELO!':(selectedMode==='boss'?'DERROTE O CHEFE!':'BOA SORTE!')));
+    if(selectedMode !== 'defense') showMessage(selectedMode === 'zombie' ? "HORDA DE ZUMBIS: SOBREVIVA!" : (selectedMode==='king'?'ESCOLTE O REI ATÉ O CASTELO!':(selectedMode==='boss'?'DERROTE O CHEFE!':(selectedMode==='sniper'?'DEFENDA O CASTELO POR 2 MINUTOS!':(selectedMode==='freeplay'?'FREEPLAY: TESTE TUDO À VONTADE!':(selectedMode==='invasion'?'PROJECT INVASION: ENTRE, ELIMINE E CUMPRA OS OBJETIVOS!':'BOA SORTE!'))))));
     requestAnimationFrame(gameLoop);
 };
 
@@ -1325,11 +1502,15 @@ function spawnZombieWave() {
 
 window.backLobby = function() {
     gameRunning = false;
-    zombieShopOpen = false;
+    invasionState.active=false;
+    if(abilitiesBeforeFreeplay!==null){equippedAbilities=abilitiesBeforeFreeplay.slice();abilitiesBeforeFreeplay=null;saveData();}
+    if(portableTurret&&portableTurret.mesh&&scene)scene.remove(portableTurret.mesh);portableTurret=null;turretControl=false;
+    if(sniperState.tower&&scene)scene.remove(sniperState.tower);if(sniperState.castle&&scene)scene.remove(sniperState.castle);if(scene){sniperState.enemies.forEach(e=>scene.remove(e.mesh));sniperState.snipers.forEach(e=>scene.remove(e.mesh));}sniperState.active=false;
+    zombieShopOpen = false;freeplayMenuOpen=false;document.getElementById('freeplayMenu').style.display='none';
     document.getElementById("zombieShop").style.display = "none";
     document.getElementById("defenseTimer").style.display = "none";
     document.getElementById("healthLabel").textContent = "❤️ Vida";
-    document.getElementById("controls").textContent = "WASD: Mover | Botão Dir: Mira (ADS) | Botão Esq: Atirar | R: Recarregar | Q: Dash | E: Cura | F: Escudo | G: Granada | X: Raio | Shift: Correr";
+    document.getElementById("controls").textContent = "WASD: Mover | Botão Dir: Mira | Botão Esq: Atirar | R: Recarregar | Q/E/F/G/X/V/C: Habilidades equipadas | T: PortatileSMG | Y: PortatileMissel | 1: Bote da Garra | B: Menu Freeplay | P: Voltar ao Lobby | Shift: Correr";
     if (defenseGun && camera) { camera.remove(defenseGun.mesh); defenseGun=null; }
     if (document.pointerLockElement) document.exitPointerLock();
     document.getElementById("game").style.display = "none";
@@ -1366,7 +1547,12 @@ window.addEventListener("keydown", (e) => {
     if (e.code === 'KeyX') useAbility('lightning');
     if (e.code === 'KeyV') useAbility('mine');
     if (e.code === 'KeyC') useAbility('fireball');
+    if (e.code === 'KeyT') useAbility('portableSMG');
+    if (e.code === 'KeyY') useAbility('portableMissel');
+    if (e.code === 'Digit1' && activeEquippedWeapon==='zombieclaw') zombieClawPounce();
+    if (e.code === 'KeyP') window.backLobby();
     if (e.code === 'KeyB' && selectedMode === 'zombie') window.toggleZombieShop();
+    if (e.code === 'KeyB' && selectedMode === 'freeplay') window.toggleFreeplayMenu();
 });
 window.addEventListener("keyup", (e) => { keys[e.code] = false; });
 
@@ -1382,17 +1568,13 @@ window.addEventListener("mouseup", (e) => {
 function updateADS(state) {
     if (!gameRunning) return;
     player.isAds = state;
-    const scopeEl = document.getElementById("scopeOverlay");
-
-    if (activeEquippedWeapon === 'sniper') {
-        if (scopeEl) scopeEl.style.display = state ? "block" : "none";
-        if (weaponMesh) weaponMesh.visible = !state;
-        camera.fov = state ? 15 : 75;
-    } else {
-        if (weaponMesh) weaponMesh.visible = true;
-        camera.fov = state ? 45 : 75;
-    }
-    camera.updateProjectionMatrix();
+    const scopeEl=document.getElementById('scopeOverlay');
+    const sight=(weaponAttachments[activeEquippedWeapon]||{}).sight|| (activeEquippedWeapon==='sniper'?'scope':null);
+    if(scopeEl){scopeEl.className='';if(state){scopeEl.style.display='block';scopeEl.classList.add(sight==='scope'?'scope4x':(sight==='holo'?'holo':(sight==='redDot'?'reddot':'iron')));}else scopeEl.style.display='none';}const cross=document.getElementById('crosshair');if(cross)cross.style.display=state?'none':'block';
+    if(weaponMesh)weaponMesh.visible=true;
+    // Red Dot/Holográfica usam retículo HUD fixo no centro; a arma desce da tela durante ADS para não prender a mira no modelo.
+    const zoom= sight==='scope'?18:(sight==='holo'?48:(sight==='redDot'?52:58));
+    camera.fov=state?zoom:75;camera.updateProjectionMatrix();
 }
 
 // --- SHOOTING, RECOIL & RELOAD ---
@@ -1406,7 +1588,7 @@ function reloadWeapon() {
 
 function updateReloadAnimation() {
     if (!player.reloading) return;
-    const duration = weaponData[activeEquippedWeapon].reload;
+    const duration = getWeaponStats(activeEquippedWeapon).reload;
     player.reloadProgress += 16;
     const t = Math.min(1.0, player.reloadProgress / duration);
 
@@ -1437,7 +1619,7 @@ function createExplosion(pos) {
     scene.add(expMesh);
     explosions.push({ mesh: expMesh, life: 18 });
 
-    if (selectedMode === 'br') {
+    if (selectedMode === 'br'||selectedMode==='invasion') {
         bots.forEach(bot => {
             if (!bot.alive) return;
             const d = pos.distanceTo(bot.mesh.position);
@@ -1473,7 +1655,8 @@ function createExplosion(pos) {
 
 function shootWeapon() {
     const now = performance.now();
-    const w = weaponData[activeEquippedWeapon];
+    const w = getWeaponStats(activeEquippedWeapon);
+    if(activeEquippedWeapon==='zombieclaw'){useZombieClaw();return;}
     if (player.reloading || player.ammo <= 0 || now - player.lastShot < w.rate) return;
 
     player.lastShot = now;
@@ -1496,14 +1679,15 @@ function shootWeapon() {
         rocket.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), dir);
 
         scene.add(rocket);
-        let guidedTarget=null, guidedZombie=null, guidedBoss=false;
+        let guidedTarget=null, guidedZombie=null, guidedBoss=false, guidedDummy=null;
         if(activeEquippedWeapon==='rpgtech'){
             let best=Infinity;
-            if(selectedMode==='br') bots.forEach(bot=>{if(!bot.alive)return;const d=rocket.position.distanceTo(bot.mesh.position);if(d<best){best=d;guidedTarget=bot;guidedZombie=null;guidedBoss=false;}});
+            if(selectedMode==='br'||selectedMode==='invasion') bots.forEach(bot=>{if(!bot.alive)return;const d=rocket.position.distanceTo(bot.mesh.position);if(d<best){best=d;guidedTarget=bot;guidedZombie=null;guidedBoss=false;}});
             if(selectedMode==='zombie') zombies.forEach(z=>{if(!z.alive)return;const d=rocket.position.distanceTo(z.mesh.position);if(d<best){best=d;guidedZombie=z;guidedTarget=null;guidedBoss=false;}});
             if(selectedMode==='boss'&&bossState.active) guidedBoss=true;
+            if(selectedMode==='freeplay'){let bestDummy=Infinity;freeplayDummies.forEach(d=>{if(!d.alive)return;const dist=rocket.position.distanceTo(d.mesh.position);if(dist<bestDummy){bestDummy=dist;guidedDummy=d;}});}
         }
-        rockets.push({ mesh: rocket, dir: dir.clone(), life: 240, guided:activeEquippedWeapon==='rpgtech', targetBot:guidedTarget, targetZombie:guidedZombie, guidedBoss, targetBoss:selectedMode==='boss', damage:w.damage, tech:activeEquippedWeapon==='rpgtech' });
+        rockets.push({ mesh: rocket, dir: dir.clone(), life: 240, guided:activeEquippedWeapon==='rpgtech', targetBot:guidedTarget, targetZombie:guidedZombie, targetDummy:guidedDummy, guidedBoss, targetBoss:selectedMode==='boss', damage:w.damage, tech:activeEquippedWeapon==='rpgtech' });
     } else {
         playSound('shoot');
         muzzleFlashLight.intensity = 3;
@@ -1517,7 +1701,9 @@ function shootWeapon() {
         const raycaster = new THREE.Raycaster();
         raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
 
-        const spreadVal = player.isAds ? w.spread * 0.2 : w.spread;
+        const sightId=(weaponAttachments[activeEquippedWeapon]||{}).sight;
+        const sightFactor=sightId==='scope'?.025:(sightId==='holo'?.08:(sightId==='redDot'?.12:.2));
+        const spreadVal = player.isAds ? w.spread * sightFactor : w.spread;
         const pellets = w.pellets || 1;
 
         for (let p = 0; p < pellets; p++) {
@@ -1525,9 +1711,19 @@ function shootWeapon() {
             spreadRay.direction.x += rand(-spreadVal, spreadVal);
             spreadRay.direction.y += rand(-spreadVal, spreadVal);
 
-            if(selectedMode==='king'){
+            if(w.isFlame){
+                const flameTargets=(selectedMode==='br'||selectedMode==='invasion')?bots.filter(b=>b.alive):zombies.filter(z=>z.alive);
+                flameTargets.forEach(t=>{const point=t.mesh.position.clone().add(new THREE.Vector3(0,1,0));const along=point.clone().sub(spreadRay.origin).dot(spreadRay.direction);if(along>0&&along<24&&spreadRay.distanceToPoint(point)<2.8){t.hp-=w.damage;igniteTarget(t,(selectedMode==='br'||selectedMode==='invasion')?'bot':'zombie');}});
+            }
+            if(selectedMode==='freeplay'){let target=null,minDist=Infinity;freeplayDummies.forEach(d=>{if(!d.alive)return;const box=new THREE.Box3().setFromObject(d.mesh);const hit=spreadRay.intersectBox(box,new THREE.Vector3());if(hit){const dist=spreadRay.origin.distanceTo(hit);if(dist<minDist){minDist=dist;target=d;}}});if(target){target.hp-=w.damage;if(target.hp<=0){target.alive=false;target.deadAt=performance.now();target.mesh.visible=false;showMessage('🎯 BONECO DE TESTE ELIMINADO!');}}}
+            else if(selectedMode==='sniper'){
+                let target=null,minDist=Infinity;
+                sniperState.enemies.forEach(en=>{if(!en.alive||!['red','yellow'].includes(en.role))return;const box=new THREE.Box3().setFromObject(en.mesh);const hit=spreadRay.intersectBox(box,new THREE.Vector3());if(hit){const d=spreadRay.origin.distanceTo(hit);if(d<minDist){minDist=d;target=en;}}});
+                sniperState.snipers.forEach(en=>{if(!en.alive)return;const box=new THREE.Box3().setFromObject(en.mesh);const hit=spreadRay.intersectBox(box,new THREE.Vector3());if(hit){const d=spreadRay.origin.distanceTo(hit);if(d<minDist){minDist=d;target=en;}}});
+                if(target){target.hp-=w.damage;playSound('hit');if(target.hp<=0){target.alive=false;scene.remove(target.mesh);if(target.role)sniperState.eliminated++;else kills++;showMessage('🎯 ALVO ELIMINADO!');}}
+            } else if(selectedMode==='king'){
                 let target=null,minDist=Infinity;kingState.snipers.forEach(sn=>{if(!sn.alive)return;const b=new THREE.Box3().setFromObject(sn.mesh);const h=spreadRay.intersectBox(b,new THREE.Vector3());if(h){const d=spreadRay.origin.distanceTo(h);if(d<minDist){minDist=d;target=sn;}}});if(target){target.hp-=w.damage;if(target.hp<=0){target.alive=false;scene.remove(target.mesh);kills++;showMessage('🎯 ATIRADOR ELIMINADO!');}}
-            } else if (selectedMode === 'br') {
+            } else if (selectedMode === 'br'||selectedMode==='invasion') {
                 let closestBot = null, minDist = Infinity;
                 bots.forEach(bot => {
                     if (!bot.alive) return;
@@ -1540,13 +1736,15 @@ function shootWeapon() {
                 });
 
                 if (closestBot) {
+                    if(w.closeOnly && minDist>9) { showMessage('CHEGUE MAIS PERTO!'); continue; }
                     closestBot.hp -= w.damage;
+                    if(w.isFlame) igniteTarget(closestBot,'bot');
                     playSound('hit');
                     if (closestBot.hp <= 0) {
                         closestBot.alive = false;
                         scene.remove(closestBot.mesh);
-                        kills++; coins += 10; matchCoins += 10; saveData();
-                        showMessage("+10 MOEDAS POR ELIMINAÇÃO!");
+                        kills++; coins += selectedMode==='invasion'?4:10; matchCoins += selectedMode==='invasion'?4:10; saveData();
+                        showMessage(selectedMode==='invasion'?'GUARDA ELIMINADO!':' +10 MOEDAS POR ELIMINAÇÃO!');
                     }
                 }
             } else if (selectedMode === 'boss' && bossState.active) {
@@ -1566,7 +1764,9 @@ function shootWeapon() {
                 });
 
                 if (closestZombie) {
+                    if(w.closeOnly && minDist>9) { showMessage('CHEGUE MAIS PERTO!'); continue; }
                     closestZombie.hp -= w.damage;
+                    if(w.isFlame) igniteTarget(closestZombie,'zombie');
                     playSound('hit');
                     if (closestZombie.hp <= 0) {
                         closestZombie.alive = false;
@@ -1601,7 +1801,7 @@ window.toggleZombieShop = function() {
 
 function renderZombieShop() {
     document.getElementById("shopZombieTokens").textContent = zombieTokens;
-    document.getElementById("zombieWeaponCards").innerHTML = Object.entries(weaponData).map(([id, w]) => `
+    document.getElementById("zombieWeaponCards").innerHTML = Object.entries(weaponData).filter(([id])=>id!=='zombieclaw').map(([id, w]) => `
         <div class="item ${activeEquippedWeapon === id ? 'selected' : ''}">
             <b>${w.name}</b>
             <p>${w.desc}</p>
@@ -1637,7 +1837,8 @@ window.buyZombieWeapon = function(id) {
 
 // --- ABILITIES ---
 function useAbility(id) {
-    if (!gameRunning || !ownedAbilities.includes(id)) return;
+    if (!gameRunning || !equippedAbilities.includes(id)) return;
+    if(id==='portableSMG'||id==='portableMissel'){deployPortableTurret(id);return;}
     const now = performance.now();
     if (now - (lastAbilityTime[id] || 0) < 8000) return;
     lastAbilityTime[id] = now;
@@ -1707,6 +1908,87 @@ function useAbility(id) {
     }
 }
 
+function igniteTarget(target,kind){if(target.mesh&&target.mesh.traverse)target.mesh.traverse(o=>{if(o.material&&o.material.color)o.material.color.set(0xff6b18);});if(!burningTargets.some(b=>b.target===target)){burningTargets.push({target,kind,last:performance.now(),until:performance.now()+4500});showMessage('🔥 INIMIGO PEGANDO FOGO!');}}
+function createInfectedAlly(target){target.alive=false;scene.remove(target.mesh);const g=new THREE.Group(),green=new THREE.MeshStandardMaterial({color:0x42d66b,roughness:.85}),dark=new THREE.MeshStandardMaterial({color:0x1e653b});const torso=new THREE.Mesh(new THREE.BoxGeometry(.72,1.15,.42),green);torso.position.y=1.05;const head=new THREE.Mesh(new THREE.SphereGeometry(.32,10,8),green);head.position.y=1.9;const arm1=new THREE.Mesh(new THREE.BoxGeometry(.2,.9,.22),green);arm1.position.set(-.5,1.05,0);const arm2=arm1.clone();arm2.position.x=.5;const leg1=new THREE.Mesh(new THREE.BoxGeometry(.24,.75,.25),dark);leg1.position.set(-.2,.38,0);const leg2=leg1.clone();leg2.position.x=.2;g.add(torso,head,arm1,arm2,leg1,leg2);g.position.copy(target.mesh.position);scene.add(g);infectedAllies.push({mesh:g,alive:true,lastAttack:0,hp:150});showMessage('🧟 INIMIGO ELIMINADO E INFECTADO! ZUMBI VERDE RECRUTADO!');}
+function getClawTargets(){if(selectedMode==='br')return bots.filter(b=>b.alive);if(selectedMode==='zombie')return zombies.filter(z=>z.alive);if(selectedMode==='freeplay')return freeplayDummies.filter(d=>d.alive);return [];}
+function useZombieClaw(){if(performance.now()-(player.lastClaw||0)<520)return;player.lastClaw=performance.now();const origin=yawObject.position.clone();const dir=new THREE.Vector3();camera.getWorldDirection(dir);let target=null,best=4.2;getClawTargets().forEach(e=>{const offset=e.mesh.position.clone().sub(origin);const d=offset.length();if(d<best&&offset.normalize().dot(new THREE.Vector3(dir.x,0,dir.z).normalize())>.15){best=d;target=e;}});if(target){target.hp-=weaponData.zombieclaw.damage;if(target.hp<=0)createInfectedAlly(target);}playSound('hit');}
+function zombieClawPounce(){if(!gameRunning||activeEquippedWeapon!=='zombieclaw')return;const dir=new THREE.Vector3();camera.getWorldDirection(dir);dir.y=0;dir.normalize();yawObject.position.addScaledVector(dir,12);getClawTargets().forEach(e=>{if(e.alive&&e.mesh.position.distanceTo(yawObject.position)<7){e.hp-=115;if(e.hp<=0)createInfectedAlly(e);}});showMessage('🧟 BOTE DA GARRA!');}
+function deployPortableTurret(kind){if(!equippedAbilities.includes(kind))return;if(portableTurret){showMessage('A TORRETA JÁ ESTÁ ATIVA!');return;}if(performance.now()<(portableCooldown[kind]||0)){showMessage('TORRETA EM RECARGA!');return;}const g=new THREE.Group(),mat=new THREE.MeshStandardMaterial({color:kind==='portableSMG'?0x53616c:0x31465b,metalness:.65});const base=new THREE.Mesh(new THREE.CylinderGeometry(.65,.8,.45,12),mat);base.position.y=.35;g.add(base);const barrel=new THREE.Mesh(new THREE.BoxGeometry(.22,.22,1.8),mat);barrel.position.set(0,1,-.8);g.add(barrel);const head=new THREE.Mesh(new THREE.SphereGeometry(.45,10,8),mat);head.position.y=1;g.add(head);g.position.set(yawObject.position.x+2,0,yawObject.position.z-2);scene.add(g);portableTurret={mesh:g,kind,ammo:200,lastShot:0,active:true};turretControl=true;showMessage('🛡️ TORRETA ATIVADA — 200 MUNIÇÕES');}
+function showTurretAmmo(){const el=document.getElementById('weaponText');if(el&&portableTurret)el.textContent=(portableTurret.kind==='portableSMG'?'PortatileSMG':'PortatileMissel')+' ('+portableTurret.ammo+'/200)';}
+function openFreeplayMenu(){if(selectedMode!=='freeplay')return;freeplayMenuOpen=true;document.getElementById('freeplayMenu').style.display='flex';if(document.pointerLockElement)document.exitPointerLock();const weapons=document.getElementById('freeplayWeapons');weapons.innerHTML=Object.entries(weaponData).map(([id,w])=>`<div class="item ${activeEquippedWeapon===id?'selected':''}"><b>${w.name}</b><p>${w.desc}</p><button onclick="window.freeplayEquipWeapon('${id}')">Equipar</button></div>`).join('');const abilities=document.getElementById('freeplayAbilities');abilities.innerHTML=Object.entries(abilityData).map(([id,a])=>`<div class="item ${equippedAbilities.includes(id)?'selected':''}"><b>${a.name}</b><p>${a.desc}</p><button onclick="window.freeplayToggleAbility('${id}')">${equippedAbilities.includes(id)?'Desequipar':'Ativar'}</button></div>`).join('');document.getElementById('freeplaySpecials').innerHTML=evolutCatalog.map(it=>`<div class="item"><b>${it.name}</b><p>${it.desc}</p><button onclick="window.freeplayEquipSpecial('${it.id}')">Usar no Freeplay</button></div>`).join('');document.getElementById('freeplayArmor').innerHTML=['Capacete Nível 1','Colete Nível 1','Capacete Nível 2','Colete Nível 2','Capacete Nível 3','Colete Nível 3','Capacete Nível 4','Colete Nível 4','Capacete Nível 5','Colete Nível 5','Armadura Militar'].map((name,i)=>`<div class="item"><b>${name}</b><p>Proteção liberada para testes.</p><button onclick="window.freeplayUseArmor(${i})">Ativar</button></div>`).join('');}
+window.openFreeplayMenu=openFreeplayMenu;window.toggleFreeplayMenu=function(){if(freeplayMenuOpen)window.closeFreeplayMenu();else openFreeplayMenu();};window.closeFreeplayMenu=function(){freeplayMenuOpen=false;document.getElementById('freeplayMenu').style.display='none';document.getElementById('clickToPlay').style.display='flex';};
+window.freeplayEquipWeapon=function(id){if(!weaponData[id])return;activeEquippedWeapon=id;if(weaponMesh)camera.remove(weaponMesh);weaponMesh=createWeaponMesh(id);camera.add(weaponMesh);const w=getWeaponStats(id);player.maxAmmo=w.mag;player.ammo=w.mag;player.reloading=false;document.getElementById('weaponText').textContent=w.name+' ('+player.ammo+'/'+player.maxAmmo+')';openFreeplayMenu();};
+window.freeplayToggleAbility=function(id){if(equippedAbilities.includes(id))equippedAbilities=equippedAbilities.filter(x=>x!==id);else if(!equippedAbilities.includes(id))equippedAbilities.push(id);openFreeplayMenu();};
+window.freeplayEquipSpecial=function(id){if(['rotary','rpgtech','zombieclaw'].includes(id))window.freeplayEquipWeapon(id);else if(['portableSMG','portableMissel'].includes(id)){if(!equippedAbilities.includes(id))equippedAbilities.push(id);openFreeplayMenu();}};
+window.freeplayUseArmor=function(i){freeplayArmorReduction=i===10?.90:(.08*(Math.floor(i/2)+1));showMessage('🪖 PROTEÇÃO ATIVADA: '+Math.round(freeplayArmorReduction*100)+'% DE REDUÇÃO');};
+function updateFreeplayMode(now){if(selectedMode!=='freeplay')return;freeplayDummies.forEach(d=>{if(!d.alive){if(now-d.deadAt>3500){d.alive=true;d.hp=d.maxHp;d.mesh.visible=true;}return;}if(d.shooter&&now>=d.nextShot){d.nextShot=now+2000;const bullet=new THREE.Mesh(new THREE.SphereGeometry(.13,8,8),new THREE.MeshBasicMaterial({color:0xff3322}));bullet.position.copy(d.mesh.position).add(new THREE.Vector3(0,1.3,-1));scene.add(bullet);freeplayBullets.push({mesh:bullet,life:110,dir:new THREE.Vector3(0,0,-1)});}});freeplayBullets.forEach((b,i)=>{b.mesh.position.addScaledVector(b.dir,1.2);b.life--;if(b.mesh.position.distanceTo(yawObject.position)<1.3){damagePlayer(5);b.life=0;}if(b.life<=0){scene.remove(b.mesh);freeplayBullets.splice(i,1);}});}
+function startSniperMode(){sniperState={active:true,enemies:[],snipers:[],start:performance.now(),ends:performance.now()+120000,eliminated:0,escaped:0,nextAttackerSpawn:performance.now()+2500};yawObject.position.set(0,18,8);yawObject.rotation.y=0;pitchObject.rotation.x=-.22;player.hp=100;activeEquippedWeapon='sniper';player.maxAmmo=weaponData.sniper.mag;player.ammo=player.maxAmmo;player.reloading=false;if(weaponMesh)camera.remove(weaponMesh);weaponMesh=createWeaponMesh('sniper');camera.add(weaponMesh);const tower=new THREE.Group(),stone=new THREE.MeshStandardMaterial({color:0x59636d});const pillar=new THREE.Mesh(new THREE.BoxGeometry(9,36,9),stone);pillar.position.set(0,0,0);tower.add(pillar);const deck=new THREE.Mesh(new THREE.BoxGeometry(14,.8,14),stone);deck.position.y=18;tower.add(deck);tower.position.set(0,0,8);scene.add(tower);sniperState.tower=tower;const castle=new THREE.Mesh(new THREE.BoxGeometry(28,15,8),stone);castle.position.set(0,7.5,-175);scene.add(castle);sniperState.castle=castle;for(let i=0;i<7;i++)spawnSniperRunner();for(let i=0;i<2;i++)spawnSniperAttacker();document.getElementById('healthLabel').textContent='❤️ Vida';document.getElementById('remainingLabel').textContent='🎯 Ameaças eliminadas:';document.getElementById('controls').textContent='Mouse: Mirar | Clique: Atirar | R: Recarregar | Elimine AMARELOS e VERMELHOS; deixe AZUIS e VERDES passar!';document.getElementById('defenseTimer').style.display='block';}
+function makeRunner(color){const g=new THREE.Group(),mat=new THREE.MeshStandardMaterial({color});const body=new THREE.Mesh(new THREE.BoxGeometry(.9,1.5,.5),mat);body.position.y=.9;g.add(body);const head=new THREE.Mesh(new THREE.SphereGeometry(.27,10,8),new THREE.MeshStandardMaterial({color:0xd8ad83}));head.position.y=1.85;g.add(head);return g;}
+function spawnSniperRunner(){const colors=[0xd62828,0xf1c40f,0x2471a3,0x239b56],role=['red','yellow','blue','green'][Math.floor(Math.random()*4)],color=colors[['red','yellow','blue','green'].indexOf(role)];const mesh=makeRunner(color);mesh.position.set(rand(-25,25),0,-rand(45,100));scene.add(mesh);sniperState.enemies.push({mesh,role,alive:true,speed:rand(.022,.035),hp:100});}
+function spawnSniperAttacker(){const mesh=makeRunner(0x252a30);mesh.position.set((Math.random()<.5?-1:1)*rand(15,28),0,rand(-20,20));scene.add(mesh);sniperState.snipers.push({mesh,alive:true,lastShot:performance.now()+rand(800,1800),hp:90});}
+function updateSniperMode(now){if(!sniperState.active)return;sniperState.enemies.forEach(e=>{if(!e.alive)return;e.mesh.position.z-=e.speed;e.mesh.lookAt(0,0,-180);if(e.mesh.position.z<-165){e.alive=false;scene.remove(e.mesh);if(e.role==='red'||e.role==='yellow'){sniperState.escaped++;sniperState.active=false;showMessage('🚨 UM INIMIGO PERIGOSO ENTROU NO CASTELO!');setTimeout(window.backLobby,2500);}}});if(sniperState.enemies.filter(e=>e.alive).length<9)spawnSniperRunner();
+ // Atiradores inimigos reaparecem continuamente, com limite simultâneo para evitar travamentos.
+ const livingAttackers=sniperState.snipers.filter(s=>s.alive).length;
+ if(now>=sniperState.nextAttackerSpawn&&livingAttackers<5){spawnSniperAttacker();sniperState.nextAttackerSpawn=now+rand(3200,4800);} 
+ sniperState.snipers.forEach(s=>{if(!s.alive)return;s.mesh.lookAt(yawObject.position);if(now>s.lastShot){s.lastShot=now+rand(1400,2200);if(Math.random()<.68)damagePlayer(rand(6,11));}});const left=Math.max(0,Math.ceil((sniperState.ends-now)/1000));document.getElementById('defenseTimer').textContent='⏱️ '+left+'s | 🎯 Eliminados: '+sniperState.eliminated+' | Atiradores: '+livingAttackers;document.getElementById('remaining').textContent=sniperState.eliminated;if(left<=0&&sniperState.active){sniperState.active=false;showMessage('🏆 CASTELO DEFENDIDO! +2 EVOLUT');awardEvolutOnce(2,'Missão Sniper concluída');setTimeout(window.backLobby,3000);}}
+
+
+function buildInvasionMap(){
+  scene.background=new THREE.Color(0x26384b);scene.fog=new THREE.FogExp2(0x26384b,.0045);
+  const wallMat=new THREE.MeshStandardMaterial({color:0x756b60,roughness:.85}),floorMat=new THREE.MeshStandardMaterial({color:0x625b50,roughness:.95}),glass=new THREE.MeshStandardMaterial({color:0x7ca4b8,metalness:.35,roughness:.2});
+  const label=invasionMap==='mansion'?'MANSÃO':(invasionMap==='bank'?'BANCO':'PREFEITURA');
+  const floor=new THREE.Mesh(new THREE.BoxGeometry(92,.8,92),floorMat);floor.position.set(0,-.45,-12);scene.add(floor);
+  // Estrutura interna jogável: paredes externas com vãos e divisórias/corredores.
+  for(const [x,z,w,d] of [[0,-58,92,3],[0,34,92,3],[-46,-12,3,92],[46,-12,3,92]]){const m=new THREE.Mesh(new THREE.BoxGeometry(w,12,d),wallMat);m.position.set(x,6,z);scene.add(m);}
+  for(let t=-42;t<=42;t+=5){obstacles.push({x:t,z:-57,r:2.5},{x:t,z:33,r:2.5},{x:-45,z:t-12,r:2.5},{x:45,z:t-12,r:2.5});}
+  for(let i=0;i<3;i++){const col=new THREE.Mesh(new THREE.BoxGeometry(2.2,10,2.2),wallMat);col.position.set(-25+i*25,5,-15);scene.add(col);}
+  const roomCount=invasionMap==='mansion'?5:(invasionMap==='bank'?4:6);
+  for(let i=0;i<roomCount;i++){const x=-30+(i%3)*30,z=-38+Math.floor(i/3)*42;const cover=new THREE.Mesh(new THREE.BoxGeometry(9,2.2,3),invasionMap==='bank'?glass:wallMat);cover.position.set(x,1.1,z);scene.add(cover);obstacles.push({x,z,r:3.5});}
+  const sign=new THREE.Mesh(new THREE.BoxGeometry(18,3,.35),new THREE.MeshStandardMaterial({color:0x202b38,emissive:0x18283b}));sign.position.set(0,9,-56.2);scene.add(sign);
+  const points=[[-25,-34],[25,-34],[0,5]];invasionState.objectives=points.map((pt,i)=>{const g=new THREE.Group();const ring=new THREE.Mesh(new THREE.TorusGeometry(3.1,.18,8,24),new THREE.MeshBasicMaterial({color:0x35d7ff}));ring.rotation.x=Math.PI/2;ring.position.y=.15;const beam=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,4,8),new THREE.MeshBasicMaterial({color:0x35d7ff,transparent:true,opacity:.5}));beam.position.y=2;g.add(ring,beam);g.position.set(pt[0],0,pt[1]);scene.add(g);return {mesh:g,x:pt[0],z:pt[1],done:false,hold:0,label:['Terminal de segurança','Cofre / arquivo','Sala de controle'][i]};});
+  const ambient=new THREE.HemisphereLight(0x9bb6d4,0x29251f,1.25);scene.add(ambient);const lamp=new THREE.PointLight(0xffd18a,2.2,95);lamp.position.set(0,10,-10);scene.add(lamp);
+  showMessage('🌙 '+label+' — INVASÃO NOTURNA');
+}
+function spawnInvasionWave(){
+  if(!invasionState.active)return;
+  invasionState.wave++;
+  const n=Math.min(6,3+invasionState.wave);
+  for(let i=0;i<n;i++){
+    const side=i%4;
+    const x=side===0?-39:(side===1?39:rand(-34,34));
+    const z=side===2?-50:(side===3?-44:rand(-48,-24));
+    const b=createBot(x,z);b.hp=68+invasionState.wave*5;b.maxHp=b.hp;b.weapon=invasionState.wave>3?'rifle':'pistol';bots.push(b);
+  }
+  invasionState.spawned+=n;
+  invasionState.nextWave=performance.now()+22000;
+  showMessage('🚨 REFORÇOS: '+n+' SOLDADOS');
+}
+function updateInvasionMode(now){
+  if(!invasionState.active)return;
+  const dt=Math.min(.08,Math.max(0,(now-(invasionState.lastTick||now))/1000));invasionState.lastTick=now;
+  const alive=bots.filter(b=>b.alive).length;
+  invasionState.objectives.forEach(o=>{
+    if(o.done)return;
+    o.mesh.rotation.y+=.012;
+    const d=Math.hypot(yawObject.position.x-o.x,yawObject.position.z-o.z);
+    if(d<5.2&&alive===0){o.hold+=dt;}else{o.hold=0;}
+    if(o.hold>=2.5){
+      o.done=true;scene.remove(o.mesh);invasionState.completed++;
+      showMessage('✅ OBJETIVO CONCLUÍDO: '+o.label);
+      if(invasionState.completed<invasionState.objectives.length){spawnInvasionWave();}
+      else{invasionState.active=false;showMessage('🏆 PROJECT INVASION CONCLUÍDO!');coins+=180;saveData();setTimeout(window.backLobby,3500);}
+    }
+  });
+  const current=invasionState.objectives.find(o=>!o.done);
+  const hold=current?Math.min(2.5,current.hold):2.5;
+  document.getElementById('remainingLabel').textContent='🎯 Objetivos:';
+  document.getElementById('remaining').textContent=invasionState.completed+'/'+invasionState.objectives.length;
+  document.getElementById('defenseTimer').style.display='block';
+  document.getElementById('defenseTimer').textContent=current?'CAPTURANDO '+Math.floor(hold/2.5*100)+'% | Inimigos: '+alive:'MISSÃO CONCLUÍDA';
+  // Reforços não aparecem enquanto a área está sendo capturada; entre objetivos há 22s de intervalo.
+}
+
+
 // --- GAME LOOP ---
 function gameLoop() {
     if (!gameRunning) return;
@@ -1715,12 +1997,15 @@ function gameLoop() {
         updateDefenseMode(performance.now());
     } else if(selectedMode==='boss'){
         updateBossMode(performance.now());
+    } else if(selectedMode==='sniper'){
+        updateSniperMode(performance.now());
+        if(!player.reloading&&mouse.left&&isPointerLocked)shootWeapon();updateReloadAnimation();
     } else if(selectedMode==='king'){
         updateKingEscort(performance.now());
-        if(!zombieShopOpen){const speed=player.speed*(player.isAds?0.6:1);const v=new THREE.Vector3((keys['KeyD']?1:0)-(keys['KeyA']?1:0),0,(keys['KeyS']?1:0)-(keys['KeyW']?1:0)).normalize().applyAxisAngle(new THREE.Vector3(0,1,0),yawObject.rotation.y);yawObject.position.addScaledVector(v,speed);if(!player.reloading&&mouse.left&&isPointerLocked)shootWeapon();updateReloadAnimation();}
-    } else if (!zombieShopOpen) {
-        const speedBoost = (ownedAbilities.includes('speed') && keys['ShiftLeft']) ? 1.6 : 1.0;
-        const moveSpeed = player.speed * speedBoost * (player.isAds ? 0.6 : 1.0);
+        if(!zombieShopOpen){const speed=player.speed*(player.isAds?0.78:1);const v=new THREE.Vector3((keys['KeyD']?1:0)-(keys['KeyA']?1:0),0,(keys['KeyS']?1:0)-(keys['KeyW']?1:0)).normalize().applyAxisAngle(new THREE.Vector3(0,1,0),yawObject.rotation.y);yawObject.position.addScaledVector(v,speed);if(!player.reloading&&mouse.left&&isPointerLocked)shootWeapon();updateReloadAnimation();}
+    } else if (!zombieShopOpen && !freeplayMenuOpen) {
+        const speedBoost = keys['ShiftLeft'] ? (equippedAbilities.includes('speed') ? 2.0 : 1.65) : 1.0;
+        const moveSpeed = player.speed * speedBoost * (player.isAds ? 0.78 : 1.0);
 
         const moveDir = new THREE.Vector3();
         if (keys['KeyW']) moveDir.z -= 1;
@@ -1730,6 +2015,7 @@ function gameLoop() {
         moveDir.normalize();
 
         moveDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), yawObject.rotation.y);
+        if(selectedMap==='sky'&&performance.now()-mapMechanicState.lastPulse<1700)moveDir.x+=mapMechanicState.windDir*.42;
         
         const newX = yawObject.position.x + moveDir.x * moveSpeed;
         const newZ = yawObject.position.z + moveDir.z * moveSpeed;
@@ -1738,6 +2024,8 @@ function gameLoop() {
         for (let obs of obstacles) {
             if (Math.hypot(newX - obs.x, newZ - obs.z) < obs.r + 0.8) { collided = true; break; }
         }
+        if(selectedMode==='freeplay'&&(Math.abs(newX)>66||Math.abs(newZ)>66))collided=true;
+        if(selectedMap==='castle'&&(Math.abs(newX)>137||Math.abs(newZ)>137))collided=true;
         if (!collided && Math.abs(newX) < WORLD_SIZE - 5 && Math.abs(newZ) < WORLD_SIZE - 5) {
             yawObject.position.x = newX;
             yawObject.position.z = newZ;
@@ -1745,15 +2033,23 @@ function gameLoop() {
         player.x = yawObject.position.x;
         player.z = yawObject.position.z;
 
-        if (!player.reloading && weaponMesh && weaponMesh.visible) {
+        // Animação suave de levantar/baixar a arma ao mirar, sem esconder o modelo.
+        if (weaponMesh) {
+            weaponMesh.visible = true;
             const targetPos = player.isAds ? ADS_POSITION : HIP_POSITION;
-            weaponMesh.position.lerp(targetPos, 0.2);
-        } else {
-            updateReloadAnimation();
+            weaponMesh.position.lerp(targetPos, player.isAds ? 0.14 : 0.18);
+            const targetRotX = player.isAds ? -0.035 : 0;
+            const targetRotY = player.isAds ? -0.025 : 0;
+            weaponMesh.rotation.x += (targetRotX - weaponMesh.rotation.x) * 0.14;
+            weaponMesh.rotation.y += (targetRotY - weaponMesh.rotation.y) * 0.14;
         }
+        if (player.reloading) updateReloadAnimation();
 
         if (mouse.left && isPointerLocked) shootWeapon();
     }
+
+    if(selectedMode==='freeplay')updateFreeplayMode(performance.now());
+    if(selectedMode==='invasion')updateInvasionMode(performance.now());
 
     grenades.forEach((g, idx) => {
         g.mesh.position.add(g.vel);
@@ -1782,12 +2078,14 @@ function gameLoop() {
     rockets.forEach((r, idx) => {
         if(r.guided&&r.targetBot&&r.targetBot.alive){const aim=r.targetBot.mesh.position.clone().add(new THREE.Vector3(0,1,0)).sub(r.mesh.position).normalize();r.dir.lerp(aim,.09).normalize();}
         else if(r.guided&&r.targetZombie&&r.targetZombie.alive){const aim=r.targetZombie.mesh.position.clone().add(new THREE.Vector3(0,1,0)).sub(r.mesh.position).normalize();r.dir.lerp(aim,.09).normalize();}
+        else if(r.guided&&r.targetDummy&&r.targetDummy.alive){const aim=r.targetDummy.mesh.position.clone().add(new THREE.Vector3(0,1,0)).sub(r.mesh.position).normalize();r.dir.lerp(aim,.09).normalize();}
         else if(r.guidedBoss&&bossState.active){const aim=bossState.boss.position.clone().add(new THREE.Vector3(0,2,0)).sub(r.mesh.position).normalize();r.dir.lerp(aim,.10).normalize();}
         r.mesh.position.addScaledVector(r.dir,r.fireball?1.05:1.8);r.life--;
         let hit=false,hitTarget=false;
         if(r.targetBoss&&bossState.active&&r.mesh.position.distanceTo(bossState.boss.position)<9){hit=true;hitTarget=true;damageBoss(r.bossDamage||r.damage||250);}
         if(!hit&&r.targetBot&&r.targetBot.alive&&r.mesh.position.distanceTo(r.targetBot.mesh.position)<4){hit=true;hitTarget=true;r.targetBot.hp-=r.damage||weaponData.rpgtech.damage;if(r.targetBot.hp<=0){r.targetBot.alive=false;scene.remove(r.targetBot.mesh);kills++;coins+=10;matchCoins+=10;saveData();}}
         if(!hit&&r.targetZombie&&r.targetZombie.alive&&r.mesh.position.distanceTo(r.targetZombie.mesh.position)<4){hit=true;hitTarget=true;r.targetZombie.hp-=r.damage||weaponData.rpgtech.damage;if(r.targetZombie.hp<=0){r.targetZombie.alive=false;scene.remove(r.targetZombie.mesh);kills++;zombieTokens+=r.targetZombie.zTokenReward||10;}}
+        if(!hit&&r.targetDummy&&r.targetDummy.alive&&r.mesh.position.distanceTo(r.targetDummy.mesh.position)<4){hit=true;hitTarget=true;r.targetDummy.hp-=r.damage||weaponData.rpgtech.damage;if(r.targetDummy.hp<=0){r.targetDummy.alive=false;r.targetDummy.deadAt=performance.now();r.targetDummy.mesh.visible=false;}}
         // Munições explosivas também colidem com inimigos comuns, sem atravessá-los.
         if(!hit&&r.fireball&&selectedMode==='boss'&&bossState.active&&r.mesh.position.distanceTo(bossState.boss.position)<9){hit=true;hitTarget=true;damageBoss(r.damage||190);}
         if(!hit&&!r.targetBoss){
@@ -1809,6 +2107,11 @@ function gameLoop() {
          else if(--m.life<=0){scene.remove(m.mesh);landmines.splice(idx,1);}
         }
     });
+
+
+    burningTargets.forEach((b,i)=>{if(!b.target.alive){burningTargets.splice(i,1);return;}if(performance.now()-b.last>500){b.last=performance.now();b.target.hp-=12;if(b.target.hp<=0){b.target.alive=false;scene.remove(b.target.mesh);if(b.kind==='bot'){kills++;coins+=10;matchCoins+=10;saveData();}else{kills++;zombieTokens+=b.target.zTokenReward||10;}}}if(performance.now()>b.until)burningTargets.splice(i,1);});
+    infectedAllies.forEach((a,i)=>{if(!a.alive){infectedAllies.splice(i,1);return;}const enemies=selectedMode==='br'?bots.filter(b=>b.alive):(selectedMode==='zombie'?zombies.filter(z=>z.alive):[]);if(!enemies.length)return;let target=enemies.reduce((best,e)=>a.mesh.position.distanceTo(e.mesh.position)<a.mesh.position.distanceTo(best.mesh.position)?e:best,enemies[0]);const d=a.mesh.position.distanceTo(target.mesh.position);if(d>1.8){a.mesh.position.lerp(target.mesh.position,.035);a.mesh.lookAt(target.mesh.position);}else if(performance.now()-a.lastAttack>700){a.lastAttack=performance.now();target.hp-=28;if(target.hp<=0){target.alive=false;scene.remove(target.mesh);}}});
+    if(portableTurret&&portableTurret.active){portableTurret.mesh.rotation.y=yawObject.rotation.y;portableTurret.mesh.position.set(yawObject.position.x+Math.sin(yawObject.rotation.y)*1.8,0,yawObject.position.z-Math.cos(yawObject.rotation.y)*1.8);if(mouse.left&&isPointerLocked&&performance.now()-portableTurret.lastShot> (portableTurret.kind==='portableSMG'?100:850)&&portableTurret.ammo>0){portableTurret.lastShot=performance.now();portableTurret.ammo--;const ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2(0,0),camera);const all=selectedMode==='br'?bots.filter(b=>b.alive):zombies.filter(z=>z.alive);let hit=all.find(t=>ray.ray.distanceToPoint(t.mesh.position)<2.5);if(hit){if(portableTurret.kind==='portableSMG'){hit.hp-=24;if(hit.hp<=0){hit.alive=false;scene.remove(hit.mesh);}}else{const muzzle=portableTurret.mesh.position.clone().add(new THREE.Vector3(0,1,-.8));const missile=new THREE.Mesh(new THREE.ConeGeometry(.13,.48,8),new THREE.MeshBasicMaterial({color:0xff8c32}));missile.position.copy(muzzle);scene.add(missile);const direction=hit.mesh.position.clone().add(new THREE.Vector3(0,1,0)).sub(muzzle).normalize();rockets.push({mesh:missile,dir:direction,life:140,guided:true,targetBot:selectedMode==='br'?hit:null,targetZombie:selectedMode==='zombie'?hit:null,damage:220});}}showTurretAmmo();}if(portableTurret.ammo<=0){portableTurret.active=false;scene.remove(portableTurret.mesh);portableCooldown[portableTurret.kind]=performance.now()+120000;portableTurret=null;turretControl=false;showMessage('TORRETA SEM MUNIÇÃO — RECARGA EM 2 MINUTOS');}}
 
     explosions.forEach((e, idx) => {
         e.life--;
@@ -1863,31 +2166,33 @@ function gameLoop() {
             p.active = false;
             scene.remove(p.mesh);
             playSound('pickup');
-            if (p.type === 'militaryPart') {militaryParts=Math.min(10,militaryParts+1);if(militaryParts>=10&&armorOwned.militaryProject){armorOwned.military=true;showMessage('🪖 ARMADURA MILITAR COMPLETA! 90% DE PROTEÇÃO!');}else showMessage('🧩 PEÇA MILITAR '+militaryParts+'/10');saveData();}
+            if (p.type === 'militaryPart') {militaryParts=Math.min(6,militaryParts+1);if(militaryParts>=6&&armorOwned.militaryProject){armorOwned.military=true;showMessage('🪖 ARMADURA MILITAR COMPLETA! 90% DE PROTEÇÃO!');}else showMessage('🧩 PEÇA MILITAR '+militaryParts+'/6');saveData();}
             else if (p.type === 'coin') {
                 if (selectedMode === 'br'||selectedMode==='boss') { coins += 5; matchCoins += 5; saveData(); showMessage("+5 MOEDAS!"); }
                 else { zombieTokens += 10; showMessage("+10 TOKENS!"); }
             } else { player.hp = Math.min(100, player.hp + 30); showMessage("+30 DE VIDA!"); }
         } else if (p.active) {
-            p.mesh.rotation.y += 0.03; if(p.type==='militaryPart')p.mesh.position.y=0.8+Math.sin(performance.now()/280)*.22;
+            p.mesh.rotation.y += 0.03; if(p.type==='militaryPart'){p.mesh.position.y=0.8+Math.sin(performance.now()/280)*.22;if(p.mesh.userData.beacon){p.mesh.userData.beacon.position.y=3+Math.sin(performance.now()/500)*.35;}}
         }
     });
 
     const now = performance.now();
-    if (selectedMode === 'br') {
+    if (selectedMode === 'br'||selectedMode==='invasion') {
         bots.forEach(bot => {
             if (!bot.alive) return;
 
             const distToCenter = Math.hypot(bot.x, bot.z);
-            if (distToCenter > safeZoneRadius - 15) {
+            if(selectedMode==='invasion'){bot.targetDir.set(player.x-bot.x,0,player.z-bot.z).normalize();const step=.10;bot.x+=bot.targetDir.x*step;bot.z+=bot.targetDir.z*step;bot.mesh.position.set(bot.x,0,bot.z);bot.mesh.lookAt(player.x,0,player.z);}
+            else if (distToCenter > safeZoneRadius - 15) {
                 bot.targetDir.set(-bot.x, 0, -bot.z).normalize();
             } else if (now - bot.aiTimer > 2500) {
                 bot.aiTimer = now;
                 bot.targetDir.set(rand(-1, 1), 0, rand(-1, 1)).normalize();
             }
 
-            const bx = bot.x + bot.targetDir.x * 0.18;
-            const bz = bot.z + bot.targetDir.z * 0.18;
+            let bx = selectedMode==='invasion'?bot.x:bot.x + bot.targetDir.x * 0.18;
+            let bz = selectedMode==='invasion'?bot.z:bot.z + bot.targetDir.z * 0.18;
+            if(selectedMap==='castle'){bx=THREE.MathUtils.clamp(bx,-137,137);bz=THREE.MathUtils.clamp(bz,-137,137);}
             
             let blocked = false;
             for (let obs of obstacles) {
@@ -1902,11 +2207,13 @@ function gameLoop() {
                 bot.targetDir.set(rand(-1, 1), 0, rand(-1, 1)).normalize();
             }
 
-            if (distToCenter > safeZoneRadius) bot.hp -= 0.1;
+            if (selectedMode==='br'&&distToCenter > safeZoneRadius) bot.hp -= 0.45;
+            if(selectedMap==='farm'||selectedMap==='nuclear'){gasZones.forEach(gz=>{if(Math.hypot(bot.x-gz.x,bot.z-gz.z)<gz.r)bot.hp-=0.28;});}
+            if(bot.hp<=0){bot.alive=false;scene.remove(bot.mesh);return;}
 
             const dPlayer = dist2D(bot, player);
             const botW = weaponData[bot.weapon];
-            if (dPlayer < 45 && now - bot.lastShot > botW.rate + 400) {
+            if (dPlayer < (selectedMode==='invasion'?32:45) && now - bot.lastShot > botW.rate + 400) {
                 bot.lastShot = now;
                 if (botW.isRpg) createExplosion(yawObject.position);
                 else damagePlayer(botW.damage * 0.4);
@@ -1948,11 +2255,14 @@ function gameLoop() {
 
         if (activeZombies === 0 && gameRunning) {
             wave++;
-            if((wave-1)%5===0)awardEvolut(1,"5 ondas de zumbis alcançadas");
+            if((wave-1)%5===0)awardEvolut(5,"5 ondas de zumbis alcançadas");
             showMessage("ONDA " + wave + " COMEÇOU!");
             spawnZombieWave();
         }
     }
+
+    updateCastleMapSpecial(performance.now());
+    updateNewMapMechanics(performance.now());
 
     if (toastTimer > 0) {
         toastTimer--;
@@ -1967,7 +2277,7 @@ function gameLoop() {
         return;
     } else if (selectedMode === 'br' && bots.filter(b => b.alive).length === 0) {
         showMessage("🏆 VITÓRIA ROYALE!");
-        awardEvolutOnce(1,"Battle Royale vencido");
+        awardEvolutOnce(2,"Battle Royale vencido");
         setTimeout(window.backLobby, 3500);
         return;
     }
@@ -1978,7 +2288,7 @@ function gameLoop() {
 
 function damagePlayer(amount) {
     if(selectedMode==='king') amount*=0.72; // Colete e capacete reduzem 28% do dano
-    if(selectedMode==='br') amount*=1-getArmorReduction();
+    if(selectedMode==='br'||selectedMode==='freeplay') amount*=1-getArmorReduction();
     if (player.shield > 0) {
         const blocked = Math.min(player.shield, amount);
         player.shield -= blocked;
@@ -2003,7 +2313,7 @@ function updateHUD() {
     document.getElementById("shieldText").textContent = Math.ceil(player.shield);
     document.getElementById("shieldFill").style.width = player.shield + "%";
 
-    document.getElementById("weaponText").textContent = (selectedMode==='boss'&&bossState.active&&bossState.vehicleType==='tank') ? 'Canhão do tanque (recarga 5s)' : (selectedMode==='boss'&&bossState.active&&bossState.vehicleType==='helicopter') ? (bossState.weaponSlot===1?'Metralhadora giratória':'RPG') : (selectedMode === 'defense' ? ("Metralhadora giratória ("+defenseState.ammo+"/100)"+(defenseState.reloading?" 🔄":"")) : (selectedMode==='king' ? ("FAL ("+player.ammo+"/"+player.maxAmmo+")"+(player.reloading?" 🔄":"")) : (weaponData[activeEquippedWeapon].name + " (" + player.ammo + "/" + player.maxAmmo + ")" + (player.reloading ? " 🔄" : ""))));
+    document.getElementById("weaponText").textContent = (selectedMode==='boss'&&bossState.active&&bossState.vehicleType==='tank') ? 'Canhão do tanque (recarga 5s)' : (selectedMode==='boss'&&bossState.active&&bossState.vehicleType==='helicopter') ? (bossState.weaponSlot===1?'Metralhadora giratória':'RPG') : (selectedMode === 'defense' ? ("Metralhadora giratória ("+defenseState.ammo+"/100)"+(defenseState.reloading?" 🔄":"")) : (selectedMode==='sniper' ? ("Sniper ("+player.ammo+"/"+player.maxAmmo+")"+(player.reloading?" 🔄":"")) : (selectedMode==='king' ? ("FAL ("+player.ammo+"/"+player.maxAmmo+")"+(player.reloading?" 🔄":"")) : (weaponData[activeEquippedWeapon].name + " (" + player.ammo + "/" + player.maxAmmo + ")" + (player.reloading ? " 🔄" : "")))));
     document.getElementById("kills").textContent = kills;
     document.getElementById("matchCoins").textContent = matchCoins;
     const eh=document.getElementById("evolutHUD");if(eh)eh.textContent=evolut;
@@ -2011,7 +2321,7 @@ function updateHUD() {
     document.getElementById("waveText").textContent = wave;
     const eb=document.getElementById("evolutBalance");if(eb)eb.textContent="💠 Evolut: "+evolut;
 
-    document.getElementById("remaining").textContent = selectedMode === 'br' ? (bots.filter(b => b.alive).length + 1) : (selectedMode === 'defense' ? defenseState.destroyed : (selectedMode==='king' ? Math.ceil(kingState.kingHp) : zombies.filter(z => z.alive).length));
+    document.getElementById("remaining").textContent = selectedMode === 'br' ? (bots.filter(b => b.alive).length + 1) : (selectedMode === 'defense' ? defenseState.destroyed : (selectedMode==='king' ? Math.ceil(kingState.kingHp) : (selectedMode==='sniper'?sniperState.eliminated:zombies.filter(z => z.alive).length)));
 
     if (selectedMode === 'br') {
         document.getElementById("zoneFill").style.width = ((safeZoneRadius / (WORLD_SIZE * 0.9)) * 100) + "%";
