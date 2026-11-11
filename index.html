@@ -449,8 +449,12 @@ const abilityData = {
 let coins = Number(localStorage.getItem("br3d_coins") || 0);
 let ownedWeapons = JSON.parse(localStorage.getItem("br3d_weapons") || '["pistol"]');
 let equipped = localStorage.getItem("br3d_equipped") || "pistol";
-let ownedAbilities = JSON.parse(localStorage.getItem("br3d_abilities") || '["dash","heal","grenade","lightning"]');
+if (!ownedWeapons.includes(equipped)) equipped = "pistol";
+// Apenas Dash e Cura são gratuitas por padrão; outras habilidades exigem compra.
+let ownedAbilities = JSON.parse(localStorage.getItem("br3d_abilities") || '["dash","heal"]');
 let equippedAbilities = JSON.parse(localStorage.getItem('br3d_equipped_abilities') || '["dash","heal"]').filter(id=>ownedAbilities.includes(id)).slice(0,2);
+// O equipamento escolhido para uma partida X1 é temporário e nunca altera a loja.
+window.x1SavedLoadout = null;
 let evolut = Number(localStorage.getItem('br3d_evolut') || 0);
 let evolutOwned = JSON.parse(localStorage.getItem('br3d_evolut_owned') || '[]');
 let armorOwned = JSON.parse(localStorage.getItem('br3d_armor') || '{"helmet":0,"vest":0,"military":false,"militaryProject":false}');
@@ -468,7 +472,7 @@ function saveData() {
     localStorage.setItem("br3d_weapons", JSON.stringify(ownedWeapons));
     localStorage.setItem("br3d_equipped", equipped);
     localStorage.setItem("br3d_abilities", JSON.stringify(ownedAbilities));
-    localStorage.setItem('br3d_equipped_abilities',JSON.stringify(equippedAbilities));
+    localStorage.setItem('br3d_equipped_abilities',JSON.stringify((window.x1SavedLoadout ? window.x1SavedLoadout.abilities : equippedAbilities).filter(id=>ownedAbilities.includes(id)).slice(0,2)));
     localStorage.setItem('br3d_evolut', evolut);
     localStorage.setItem('br3d_evolut_owned', JSON.stringify(evolutOwned));
     localStorage.setItem('br3d_armor', JSON.stringify(armorOwned));
@@ -521,7 +525,7 @@ window.updateLobby = function() {
     document.getElementById("weapons").innerHTML = Object.entries(weaponData).filter(([id])=>!['rotary','rpgtech','zombieclaw','m16','gatling','remington870','colt45'].includes(id)).map(([id, w]) => {
         let owned = ownedWeapons.includes(id);
         return `
-            <div class="item ${equipped === id ? 'selected' : ''}">
+            <div class="item ${owned && equipped === id ? 'selected' : ''}">
                 <b>${w.name}</b>
                 <p>${w.desc}</p>
                 <small style="color:#f1c40f">${owned ? 'Comprada' : '🪙 ' + w.price}</small>
@@ -534,7 +538,7 @@ window.updateLobby = function() {
 
     const activeAbilityCount=equippedAbilities.length;
     document.getElementById("abilities").innerHTML = `<div style="grid-column:1/-1;text-align:center;color:#d7a7ff;font-weight:bold;margin-bottom:8px">Habilidades equipadas: ${activeAbilityCount}/2 <button onclick="window.clearAbilities()" style="margin-left:8px;background:#7f2935">Desequipar todas</button></div>` + Object.entries(abilityData).map(([id, a]) => {
-        let owned = ownedAbilities.includes(id), equippedNow=equippedAbilities.includes(id);
+        let owned = ownedAbilities.includes(id), equippedNow=owned && equippedAbilities.includes(id);
         return `<div class="item ${equippedNow?'selected':''}"><b>${a.name}</b><p>${a.desc}</p><small style="color:#f1c40f">${owned ? (equippedNow?'EQUIPADA':'Desbloqueada') : (['portableSMG','portableMissel'].includes(id)?'💠 Compre na Loja Evolut':'🪙 ' + a.price)}</small><button onclick="${owned ? `window.toggleAbility('${id}')` : (['portableSMG','portableMissel'].includes(id)?'window.openEvolutShop()':`window.buyAbility('${id}')`)}">${owned ? (equippedNow?'Desequipar':'Equipar') : (['portableSMG','portableMissel'].includes(id)?'Abrir Loja Evolut':'Comprar')}</button></div>`;
     }).join("");
 };
@@ -1545,6 +1549,12 @@ function spawnZombieWave() {
 window.backLobby = function() {
     gameRunning = false;deathScreenShown=false;document.getElementById('deathScreen').style.display='none';
     invasionState.active=false;
+    if(selectedMode==='x1' && window.x1SavedLoadout){
+        equipped = window.x1SavedLoadout.weapon;
+        equippedAbilities = window.x1SavedLoadout.abilities.slice();
+        window.x1SavedLoadout = null;
+        saveData();
+    }
     if(abilitiesBeforeFreeplay!==null){equippedAbilities=abilitiesBeforeFreeplay.slice();abilitiesBeforeFreeplay=null;saveData();}
     if(portableTurret&&portableTurret.mesh&&scene)scene.remove(portableTurret.mesh);portableTurret=null;turretControl=false;
     if(sniperState.tower&&scene)scene.remove(sniperState.tower);if(sniperState.castle&&scene)scene.remove(sniperState.castle);if(scene){sniperState.enemies.forEach(e=>scene.remove(e.mesh));sniperState.snipers.forEach(e=>scene.remove(e.mesh));}sniperState.active=false;
@@ -2463,7 +2473,7 @@ try{await ref.child('guest').set(playerId);await ref.child('guest').onDisconnect
 function listenRoom(){if(roomListener&&roomRef)roomRef.off('value',roomListener);roomListener=snap=>{const r=snap.val();if(!r){say('A sala foi encerrada.');window.x1LeaveRoom(false);return;}if(r.phase==='waiting'){$('x1RoomStatus').textContent=r.guest?'Dois jogadores conectados! O criador está configurando.':'Aguardando o segundo jogador...';if(isHost)$('x1StartButton').style.display='none';}
  if(isHost&&r.phase==='waiting'&&r.guest){$('x1HostSettings').style.display='block';$('x1StartButton').style.display='inline-block';}
  if(r.phase==='loadout'){$('x1HostSettings').style.display='none';$('x1StartButton').style.display='none';$('x1RoomStatus').textContent='Escolham seus equipamentos permitidos.';$('x1Loadout').style.display='block';fillLoadout(r);}
- if(r.phase==='match'&&!matchLaunched){matchLaunched=true;selectedMode='x1';selectedMap=r.map||'forest';activeEquippedWeapon=(r.players&&r.players[playerId]&&r.players[playerId].weapon)||'pistol';equipped=activeEquippedWeapon;equippedAbilities=(r.players&&r.players[playerId]&&r.players[playerId].ability)?[r.players[playerId].ability]:[];$('x1RoomPanel').style.display='none';window.startGame();}
+ if(r.phase==='match'&&!matchLaunched){matchLaunched=true;window.x1SavedLoadout={weapon:equipped,abilities:equippedAbilities.slice()};selectedMode='x1';selectedMap=r.map||'forest';activeEquippedWeapon=(r.players&&r.players[playerId]&&r.players[playerId].weapon)||'pistol';equippedAbilities=(r.players&&r.players[playerId]&&r.players[playerId].ability)?[r.players[playerId].ability]:[];$('x1RoomPanel').style.display='none';window.startGame();}
  if(r.phase==='finished'&&gameRunning){showMessage(r.winner===playerId?'🏆 VOCÊ VENCEU O X1!':'💀 VOCÊ PERDEU O X1!');setTimeout(window.backLobby,3500);}
  };roomRef.on('value',roomListener);}
 window.x1PublishRules=async function(){if(!isHost||!roomRef)return;const allowedWeapons=[...document.querySelectorAll('[data-x1w]:checked')].map(x=>x.dataset.x1w),allowedAbilities=[...document.querySelectorAll('[data-x1a]:checked')].map(x=>x.dataset.x1a);if(!allowedWeapons.length){say('Permita pelo menos uma arma.');return;}try{await roomRef.update({map:$('x1MapSelect').value,allowedWeapons,allowedAbilities});$('x1RoomStatus').textContent='Regras salvas! O outro jogador escolherá o equipamento.';await roomRef.update({phase:'loadout'});$('x1HostSettings').style.display='none';$('x1Loadout').style.display='block';const snap=await roomRef.get();fillLoadout(snap.val());}catch(e){say('Erro ao salvar: '+e.message);}};
